@@ -54,10 +54,16 @@ public final class JavaRuntime {
         }
 
         if (required <= localMajor() && !"jre-legacy".equals(component)) {
-            if (listener != null) {
-                listener.log("Using local Java " + localMajor() + " (version requires Java " + required + ")");
+            Path local = localJava();
+            if (Files.isRegularFile(local)) {
+                if (listener != null) {
+                    listener.log("Using local Java " + localMajor() + " (version requires Java " + required + ")");
+                }
+                return local;
             }
-            return localJava();
+            if (listener != null) {
+                listener.log("Local Java at " + local + " not found; looking for a bundled or downloaded runtime.");
+            }
         }
 
         // Fall back to the launcher's bundled JRE (packaged with jpackage) if it satisfies requirements
