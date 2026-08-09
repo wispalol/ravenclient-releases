@@ -358,7 +358,7 @@ public class LauncherUI extends Application {
     private VBox buildSidebar() {
         VBox logoBox = new VBox(2);
         logoBox.setAlignment(Pos.CENTER);
-        logoBox.setPadding(new Insets(0, 0, 18, 0));
+        logoBox.setPadding(new Insets(0, 0, 16, 0));
         Label logo = new Label("RAVEN");
         logo.getStyleClass().add("sidebar-logo");
         Label logoSub = new Label("client");
@@ -370,7 +370,7 @@ public class LauncherUI extends Application {
 
         VBox nav = new VBox(4, logoBox,
                 homeBtn, modsBtn, versionsBtn, profilesBtn, cosmeticsBtn, spacer, settingsBtn);
-        nav.setPadding(new Insets(22, 10, 18, 10));
+        nav.setPadding(new Insets(20, 10, 16, 10));
         nav.getStyleClass().add("sidebar");
 
         for (ToggleButton b : new ToggleButton[]{homeBtn, modsBtn, versionsBtn, profilesBtn, cosmeticsBtn, settingsBtn}) {
@@ -453,12 +453,11 @@ public class LauncherUI extends Application {
         memLabel.getStyleClass().add("memory-label");
         memoryLabel = memLabel;
         memorySlider.valueProperty().addListener((o, a, b) -> memLabel.setText(((int) b.doubleValue()) + " GB"));
-
         // Top bar
         HBox topBar = new HBox(14);
         topBar.getStyleClass().add("top-bar");
         topBar.setAlignment(Pos.CENTER_LEFT);
-        topBar.setPadding(new Insets(16, 24, 16, 24));
+        topBar.setPadding(new Insets(14, 22, 14, 22));
 
         Label logoMark = new Label("R");
         logoMark.getStyleClass().add("logo-mark");
@@ -486,7 +485,7 @@ public class LauncherUI extends Application {
         topBar.getChildren().addAll(logoMark, logoBox, topSpacer, accountInfo);
 
         // Hero card
-        VBox hero = new VBox(14);
+        VBox hero = new VBox(12);
         hero.getStyleClass().add("hero-card");
         HBox.setHgrow(hero, Priority.ALWAYS);
 
@@ -512,21 +511,21 @@ public class LauncherUI extends Application {
         Button play = new Button("PLAY");
         play.getStyleClass().add("play-button");
         play.setMaxWidth(Double.MAX_VALUE);
-        play.setPrefHeight(52);
+        play.setPrefHeight(50);
         play.setOnAction(e -> onLaunch());
 
         hero.getChildren().addAll(heroKicker, heroTitle, loaderCaption, pills,
                 versionCaption, versionRow, memoryCaption, memoryRow, play);
 
         // Right column
-        VBox right = new VBox(16);
-        right.setPrefWidth(300);
+        VBox right = new VBox(14);
+        right.setPrefWidth(280);
 
-        VBox profilesCard = new VBox(12);
-        profilesCard.getStyleClass().add("side-card");
+        VBox profilesCard = new VBox(10);
+        profilesCard.getStyleClass().add("glass-panel");
         Label profilesTitle = new Label("Profiles");
         profilesTitle.getStyleClass().add("side-card-title");
-        VBox profilesList = new VBox(8);
+        VBox profilesList = new VBox(6);
         refreshProfilesList(profilesList);
         Button newProfileBtn = new Button("+  New profile");
         newProfileBtn.getStyleClass().add("ghost-button");
@@ -535,7 +534,7 @@ public class LauncherUI extends Application {
         profilesCard.getChildren().addAll(profilesTitle, profilesList, newProfileBtn);
 
         VBox instanceCard = new VBox(10);
-        instanceCard.getStyleClass().add("side-card");
+        instanceCard.getStyleClass().add("glass-panel");
         Label instanceTitle = new Label("Instance");
         instanceTitle.getStyleClass().add("side-card-title");
         String loaderForMods = activeLoaderName();
@@ -555,8 +554,8 @@ public class LauncherUI extends Application {
         Node playerDisplay = buildPlayerDisplay();
 
         // Main layout with hero, player display, and right column
-        HBox main = new HBox(20);
-        main.setPadding(new Insets(24, 28, 24, 28));
+        HBox main = new HBox(18);
+        main.setPadding(new Insets(22, 26, 22, 26));
         main.getChildren().addAll(hero, playerDisplay, right);
         HBox.setHgrow(hero, Priority.ALWAYS);
         HBox.setHgrow(right, Priority.NEVER);
@@ -577,14 +576,13 @@ public class LauncherUI extends Application {
         VBox newsItems = new VBox(12);
         newsItems.setPadding(new Insets(16, 28, 16, 28));
 
-        // Sample news items - in a real implementation these would come from an API
         newsItems.getChildren().addAll(
-            newsCard("RavenClient 1.0.12 Update", "New animated UI with enhanced visuals, smooth page transitions, and a central player skin display. Check it out!"),
-            newsCard("Minecraft 1.21.11 Release", "The latest Minecraft update is now supported. Download the new version from the Versions tab.")
+            newsCard("RavenClient " + ClientVersion.VERSION + " Update", "New animated UI with enhanced visuals, smooth page transitions, and a central player skin display. Check it out!"),
+            newsCard("Minecraft " + (SUPPORTED_VERSIONS.isEmpty() ? "" : SUPPORTED_VERSIONS.get(SUPPORTED_VERSIONS.size() - 1)) + " Release", "The latest Minecraft update is now supported. Download the new version from the Versions tab.")
         );
 
         HBox container = new HBox();
-        container.setPadding(new Insets(0, 28, 16, 28));
+        container.setPadding(new Insets(0, 28, 20, 28));
         container.getChildren().add(newsItems);
         HBox.setHgrow(newsItems, Priority.ALWAYS);
 
@@ -637,12 +635,14 @@ public class LauncherUI extends Application {
 
         ModBrowser browser = new ModBrowser(config, SUPPORTED_VERSIONS, loader, pool, this::appendLog, modsDir);
         Node content = browser.build();
-        BorderPane wrap = new BorderPane(content);
+        VBox wrap = new VBox(content);
+        wrap.getStyleClass().add("glass-panel");
         Label title = new Label("Mods");
         title.getStyleClass().add("page-title");
         BorderPane.setMargin(title, new Insets(0, 0, 0, 36));
-        wrap.setTop(title);
-        return wrap;
+        BorderPane pane = new BorderPane(wrap);
+        pane.setTop(title);
+        return pane;
     }
 
     /** The mods directory a loader profile uses: version-scoped for loaders, root for vanilla. */
@@ -663,19 +663,23 @@ public class LauncherUI extends Application {
         ComboBox<String> createCombo = new ComboBox<>();
         createCombo.getItems().addAll(SUPPORTED_VERSIONS);
         createCombo.setPromptText("Minecraft version");
+        createCombo.getStyleClass().add("modern-combobox");
+        createCombo.setPrefWidth(150);
+
         ComboBox<String> createLoader = new ComboBox<>();
         createLoader.getItems().addAll(
                 java.util.Arrays.stream(Loader.moddedLoaders()).map(Loader::displayName).toList());
         createLoader.setValue("Fabric");
-        createLoader.setPrefWidth(120);
+        createLoader.setPrefWidth(130);
+        createLoader.getStyleClass().add("modern-combobox");
         Button createProfile = new Button("Install profile");
         createProfile.getStyleClass().add("secondary-button");
         createProfile.setOnAction(e -> installLoader(createCombo, createLoader));
-        HBox createRow = new HBox(10, createCombo, createLoader, createProfile);
+        HBox createRow = new HBox(12, createCombo, createLoader, createProfile);
         createRow.setAlignment(Pos.CENTER_LEFT);
 
         VBox installedBox = new VBox(10);
-        installedBox.setPadding(new Insets(14, 36, 24, 36));
+        installedBox.setPadding(new Insets(14, 32, 24, 32));
 
         refreshVersions(installedBox);
 
@@ -684,7 +688,7 @@ public class LauncherUI extends Application {
         note.getStyleClass().add("muted");
 
         VBox list = new VBox(14, title, createRow, note, new Label("Installed profiles:"), installedBox);
-        list.setPadding(new Insets(18, 36, 18, 36));
+        list.setPadding(new Insets(18, 32, 18, 32));
         return new StackPane(new ScrollPane(list));
     }
 
@@ -711,10 +715,25 @@ public class LauncherUI extends Application {
         final String finalType = type;
         final Runnable finalOnDelete = onDelete;
         
+        VBox card = new VBox(10);
+        card.getStyleClass().add("profile-row");
+        
+        HBox row = new HBox(12);
+        row.setAlignment(Pos.CENTER_LEFT);
+        
+        Label nameLbl = new Label(name);
+        nameLbl.getStyleClass().add("profile-name");
+        nameLbl.setMaxWidth(260);
+        nameLbl.setTextOverrun(OverrunStyle.ELLIPSIS);
+        
         Label typeBadge = new Label(type);
         typeBadge.getStyleClass().add(getBadgeStyle(type));
+        
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        
         Button play = new Button("Play");
-        play.getStyleClass().add("secondary-button");
+        play.getStyleClass().add("mini-play");
         play.setOnAction(e -> {
             if (gameProcess != null && gameProcess.isAlive()) {
                 setStatus("Minecraft is already running.");
@@ -722,16 +741,16 @@ public class LauncherUI extends Application {
             }
             launch(finalId, finalType);
         });
-        HBox row = new HBox(12, new Label(name), typeBadge, new Region(), play);
-        HBox.setHgrow(new Region(), Priority.ALWAYS);
-        row.setAlignment(Pos.CENTER_LEFT);
         if (finalOnDelete != null) {
             Button del = new Button("Delete");
-            del.getStyleClass().add("secondary-button");
+            del.getStyleClass().add("mini-delete");
             del.setOnAction(e -> finalOnDelete.run());
-            row.getChildren().addAll(del);
+            row.getChildren().addAll(nameLbl, typeBadge, spacer, play, del);
+        } else {
+            row.getChildren().addAll(nameLbl, typeBadge, spacer, play);
         }
-        return row;
+        card.getChildren().add(row);
+        return card;
     }
 
     private String getBadgeStyle(String type) {
@@ -934,20 +953,20 @@ public class LauncherUI extends Application {
 
         TextField nameField = new TextField();
         nameField.setPromptText("Profile name");
-        nameField.setPrefWidth(240);
+        nameField.setPrefWidth(260);
         nameField.getStyleClass().add("search-box");
 
         ComboBox<String> versionCombo = new ComboBox<>();
         versionCombo.getItems().addAll(SUPPORTED_VERSIONS);
         versionCombo.setValue(activeVersion());
         versionCombo.getStyleClass().add("modern-combobox");
-        versionCombo.setPrefWidth(150);
+        versionCombo.setPrefWidth(140);
 
         ComboBox<String> loaderComboP = new ComboBox<>();
         loaderComboP.getItems().addAll("Vanilla", "Fabric", "Quilt", "Forge", "NeoForge");
         loaderComboP.setValue(getLoaderName());
         loaderComboP.getStyleClass().add("modern-combobox");
-        loaderComboP.setPrefWidth(150);
+        loaderComboP.setPrefWidth(140);
 
         Button createBtn = new Button("Create profile");
         createBtn.getStyleClass().add("primary-button");
@@ -969,10 +988,10 @@ public class LauncherUI extends Application {
             }
         });
 
-        HBox createRow = new HBox(10, nameField, versionCombo, loaderComboP, createBtn);
+        HBox createRow = new HBox(12, nameField, versionCombo, loaderComboP, createBtn);
         createRow.setAlignment(Pos.CENTER_LEFT);
 
-        VBox list = new VBox(12);
+        VBox list = new VBox(14);
         List<Profile> profiles = ProfileStore.load(config.launcherDir);
         if (profiles.isEmpty()) {
             Label empty = new Label("No profiles yet. Create one to keep separate mod sets per Minecraft version.");
@@ -985,8 +1004,8 @@ public class LauncherUI extends Application {
             }
         }
 
-        VBox body = new VBox(16, title, createRow, list);
-        body.setPadding(new Insets(24, 36, 24, 36));
+        VBox body = new VBox(18, title, createRow, list);
+        body.setPadding(new Insets(22, 32, 22, 32));
         ScrollPane scroll = new ScrollPane(body);
         scroll.setFitToWidth(true);
         return new StackPane(scroll);
@@ -1133,7 +1152,7 @@ public class LauncherUI extends Application {
     private Node buildPlayerDisplay() {
         VBox container = new VBox(12);
         container.setAlignment(Pos.CENTER);
-        container.setPrefWidth(200);
+        container.setPrefWidth(180);
         container.setPadding(new Insets(12, 0, 12, 0));
 
         StackPane avatarBox = new StackPane();
@@ -1148,7 +1167,6 @@ public class LauncherUI extends Application {
             skin.setFitHeight(80);
             skin.setPreserveRatio(true);
             String uuid = account.uuid().replace("-", "");
-            // Use a more reliable avatar URL with fallback
             String avatarUrl = "https://crafatar.com/avatars/" + uuid;
             pool.execute(() -> {
                 try {
@@ -1172,6 +1190,7 @@ public class LauncherUI extends Application {
         Label playerName = new Label(account != null ? accountLabel.getText() : "Not signed in");
         playerName.getStyleClass().add("player-name");
         playerName.setMinWidth(160);
+        playerName.setAlignment(Pos.CENTER);
 
         Label playerStatus = new Label(account != null ? "Online" : "Offline");
         playerStatus.getStyleClass().add(account != null ? "player-online" : "player-offline");
@@ -1277,8 +1296,8 @@ public class LauncherUI extends Application {
         hudInfo.setWrapText(true);
         hudInfo.getStyleClass().add("muted");
         
-        VBox body = new VBox(16, title, info, hudInfo);
-        body.setPadding(new Insets(24, 36, 24, 36));
+        VBox body = new VBox(14, title, info, hudInfo);
+        body.setPadding(new Insets(22, 32, 22, 32));
         return new StackPane(new ScrollPane(body));
     }
 
@@ -1286,21 +1305,33 @@ public class LauncherUI extends Application {
         Label title = new Label("Settings");
         title.getStyleClass().add("page-title");
 
+        VBox form = new VBox(14);
+        form.setPadding(new Insets(22, 32, 22, 32));
+
+        VBox memCard = new VBox(10);
+        memCard.getStyleClass().add("panel");
+        Label memLabelTitle = new Label("Memory allocation");
+        memLabelTitle.getStyleClass().add("panel-title");
         HBox memRow = new HBox(12, new Label("Memory:"), memorySlider, memoryLabel);
         memRow.setAlignment(Pos.CENTER_LEFT);
+        memCard.getChildren().addAll(memLabelTitle, memRow);
 
+        VBox actionsCard = new VBox(10);
+        actionsCard.getStyleClass().add("panel");
+        Label actionsTitle = new Label("Actions");
+        actionsTitle.getStyleClass().add("panel-title");
         Button openGame = new Button("Open game folder");
         openGame.getStyleClass().add("secondary-button");
         openGame.setOnAction(e -> openGameFolder());
-
         Button openLogs = new Button("Open logs folder");
         openLogs.getStyleClass().add("secondary-button");
         openLogs.setOnAction(e -> openFolder(config.launcherDir));
+        actionsCard.getChildren().addAll(actionsTitle, openGame, openLogs);
 
-        Button saveBtn = new Button("Save");
-        saveBtn.getStyleClass().add("primary-button");
-        saveBtn.setOnAction(e -> saveSettings());
-
+        VBox updateCard = new VBox(10);
+        updateCard.getStyleClass().add("panel");
+        Label updateTitle = new Label("Updates");
+        updateTitle.getStyleClass().add("panel-title");
         Label versionLabel = new Label("Version " + ClientVersion.VERSION);
         versionLabel.getStyleClass().add("side-row-value");
         Button checkUpdates = new Button("Check for updates");
@@ -1308,10 +1339,16 @@ public class LauncherUI extends Application {
         checkUpdates.setOnAction(e -> checkForUpdatesManual());
         HBox updateRow = new HBox(12, versionLabel, checkUpdates);
         updateRow.setAlignment(Pos.CENTER_LEFT);
+        updateCard.getChildren().addAll(updateTitle, updateRow);
 
-        VBox form = new VBox(14, title, memRow, openGame, openLogs, saveBtn, updateRow);
-        form.setPadding(new Insets(24, 36, 24, 36));
-        return new StackPane(new ScrollPane(form));
+        Button saveBtn = new Button("Save settings");
+        saveBtn.getStyleClass().add("primary-button");
+        saveBtn.setOnAction(e -> saveSettings());
+
+        form.getChildren().addAll(title, memCard, actionsCard, updateCard, saveBtn);
+        ScrollPane scroll = new ScrollPane(form);
+        scroll.setFitToWidth(true);
+        return new StackPane(scroll);
     }
 
     private void saveSettings() {
@@ -1340,19 +1377,19 @@ public class LauncherUI extends Application {
         statusLabel.getStyleClass().add("status");
         progressBar = new ProgressBar(0);
         progressBar.setMaxWidth(Double.MAX_VALUE);
-        progressBar.setPrefHeight(6);
+        progressBar.setPrefHeight(5);
         progressBar.getStyleClass().add("thin");
         HBox.setHgrow(progressBar, Priority.ALWAYS);
-        bar.setPadding(new Insets(6, 16, 6, 16));
+        bar.setPadding(new Insets(8, 18, 8, 18));
 
         Region spinnerRegion = new Region();
-        spinnerRegion.setMinWidth(16);
-        spinnerRegion.setMinHeight(16);
+        spinnerRegion.setMinWidth(14);
+        spinnerRegion.setMinHeight(14);
         spinnerRegion.setStyle("-fx-background-color: transparent; -fx-background-radius: 8;");
         spinnerRegion.getStyleClass().add("spinner");
         Timeline spin = new Timeline(
             new KeyFrame(Duration.millis(0), new KeyValue(spinnerRegion.rotateProperty(), 0)),
-            new KeyFrame(Duration.millis(600), new KeyValue(spinnerRegion.rotateProperty(), 360))
+            new KeyFrame(Duration.millis(700), new KeyValue(spinnerRegion.rotateProperty(), 360))
         );
         spin.setCycleCount(Timeline.INDEFINITE);
         spin.play();
