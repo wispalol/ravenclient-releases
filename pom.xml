@@ -6,7 +6,7 @@
 
     <groupId>org.ravenclient</groupId>
     <artifactId>ravenclient</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
     <name>RavenClient</name>
     <description>An open-source Minecraft launcher with Microsoft account support.</description>
 
@@ -55,44 +55,28 @@
                  Enable generateInstaller=true if Inno Setup (iscc) is installed
                  to also produce a setup .exe. -->
             <plugin>
-                <groupId>io.github.fvarrui</groupId>
-                <artifactId>javapackager</artifactId>
-                <version>1.7.6</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
                         <goals>
-                            <goal>package</goal>
+                            <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <mainClass>org.ravenclient.RavenClient</mainClass>
-                            <name>RavenClient</name>
-                            <displayName>RavenClient</displayName>
-                            <version>${project.version}</version>
-                            <organizationName>RavenClient</organizationName>
-                            <bundleJre>true</bundleJre>
-                            <customizedJre>false</customizedJre>
-                            <iconFile>${project.basedir}/src/main/resources/raven.ico</iconFile>
-                            <winConfig>
-                                <icoFile>${project.basedir}/src/main/resources/raven.ico</icoFile>
-                                <createDesktopIconTask>true</createDesktopIconTask>
-                                <disableRunAfterInstall>false</disableRunAfterInstall>
-                                <setupMode>installForCurrentUser</setupMode>
-                                <generateSetup>${generateInstaller}</generateSetup>
-                                <generateMsi>false</generateMsi>
-                            </winConfig>
-                            <generateInstaller>${generateInstaller}</generateInstaller>
-                            <createZipball>true</createZipball>
-                            <!-- Explicit classpath: javapackager sometimes bakes the launcher's
-                                 own .exe as the only class path entry. Force app.jar + libs. -->
-                            <classpath>app.jar;libs/*</classpath>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>org.ravenclient.RavenClient</mainClass>
+                                </transformer>
+                            </transformers>
+                            <finalName>ravenclient-${project.version}-runnable</finalName>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
 
-            <!-- Ensure the application jar is present in the packaged app dir so the
-                 native launcher (which bakes classpath=app.jar;libs/*) can load it. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
@@ -130,6 +114,47 @@
                                     </zipfileset>
                                 </zip>
                             </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Build a native Windows EXE with a bundled JRE:  mvn package
+                 Output lands in target/RavenClient/ with RavenClient.exe.
+                 Enable generateInstaller=true if Inno Setup (iscc) is installed
+                 to also produce a setup .exe. -->
+            <plugin>
+                <groupId>io.github.fvarrui</groupId>
+                <artifactId>javapackager</artifactId>
+                <version>1.7.6</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>package</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>org.ravenclient.RavenClient</mainClass>
+                            <name>RavenClient</name>
+                            <displayName>RavenClient</displayName>
+                            <version>${project.version}</version>
+                            <organizationName>RavenClient</organizationName>
+                            <bundleJre>true</bundleJre>
+                            <customizedJre>false</customizedJre>
+                            <iconFile>${project.basedir}/src/main/resources/raven.ico</iconFile>
+                            <winConfig>
+                                <icoFile>${project.basedir}/src/main/resources/raven.ico</icoFile>
+                                <createDesktopIconTask>true</createDesktopIconTask>
+                                <disableRunAfterInstall>false</disableRunAfterInstall>
+                                <setupMode>installForCurrentUser</setupMode>
+                                <generateSetup>${generateInstaller}</generateSetup>
+                                <generateMsi>false</generateMsi>
+                            </winConfig>
+                            <generateInstaller>${generateInstaller}</generateInstaller>
+                            <createZipball>true</createZipball>
+                            <!-- Explicit classpath: javapackager sometimes bakes the launcher's
+                                 own .exe as the only class path entry. Force app.jar + libs. -->
+                            <classpath>app.jar;libs/*</classpath>
                         </configuration>
                     </execution>
                 </executions>
