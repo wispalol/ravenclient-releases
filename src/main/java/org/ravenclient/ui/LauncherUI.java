@@ -2,7 +2,12 @@ package org.ravenclient.ui;
 
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.animation.*;
+import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
 import javafx.util.Duration;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -394,30 +399,21 @@ public class LauncherUI extends Application {
             Node oldPage = pageContainer.getChildren().get(0);
             oldPage.setOpacity(1);
             newPage.setOpacity(0);
-            newPage.setScaleY(0.97);
             pageContainer.getChildren().add(newPage);
 
-            Timeline slideOut = new Timeline(
-                new KeyFrame(Duration.millis(0),
-                    new KeyValue(oldPage.opacityProperty(), 1),
-                    new KeyValue(oldPage.translateYProperty(), 0)),
-                new KeyFrame(Duration.millis(200),
-                    new KeyValue(oldPage.opacityProperty(), 0),
-                    new KeyValue(oldPage.translateYProperty(), -12, Interpolator.EASE_IN))
-            );
-            Timeline slideIn = new Timeline(
-                new KeyFrame(Duration.millis(0),
-                    new KeyValue(newPage.translateYProperty(), 12),
-                    new KeyValue(newPage.opacityProperty(), 0)),
-                new KeyFrame(Duration.millis(250),
-                    new KeyValue(newPage.translateYProperty(), 0, Interpolator.EASE_OUT),
-                    new KeyValue(newPage.opacityProperty(), 1, Interpolator.EASE_OUT),
-                    new KeyValue(newPage.scaleYProperty(), 1, Interpolator.EASE_OUT))
-            );
+            FadeTransition fadeOut = new FadeTransition(Duration.millis(150), oldPage);
+            fadeOut.setFromValue(1.0);
+            fadeOut.setToValue(0.0);
 
-            slideIn.play();
-            slideOut.setOnFinished(e -> pageContainer.getChildren().remove(oldPage));
-            slideOut.play();
+            FadeTransition fadeIn = new FadeTransition(Duration.millis(150), newPage);
+            fadeIn.setFromValue(0.0);
+            fadeIn.setToValue(1.0);
+
+            fadeOut.setOnFinished(e -> {
+                pageContainer.getChildren().remove(oldPage);
+                fadeIn.play();
+            });
+            fadeOut.play();
         } else {
             pageContainer.getChildren().setAll(newPage);
         }
@@ -1131,9 +1127,10 @@ public class LauncherUI extends Application {
     }
 
     private Node buildPlayerDisplay() {
-        VBox container = new VBox(14);
+        VBox container = new VBox(12);
         container.setAlignment(Pos.CENTER);
-        container.setPrefWidth(180);
+        container.setPrefWidth(200);
+        container.setPadding(new Insets(12, 0, 12, 0));
 
         StackPane avatarBox = new StackPane();
         avatarBox.setMinSize(80, 80);
@@ -1147,11 +1144,16 @@ public class LauncherUI extends Application {
             skin.setFitHeight(80);
             skin.setPreserveRatio(true);
             String uuid = account.uuid().replace("-", "");
-            String avatarUrl = "https://crafatar.com/avatars/" + uuid + "?default=MHF_Alex";
+            // Use a more reliable avatar URL with fallback
+            String avatarUrl = "https://crafatar.com/avatars/" + uuid;
             pool.execute(() -> {
                 try {
-                    Image img = new Image(avatarUrl, 80, 80, true, true, true);
-                    Platform.runLater(() -> skin.setImage(img));
+                    Image img = new Image(avatarUrl, 80, 80, true, true);
+                    Platform.runLater(() -> {
+                        if (img.getWidth() > 0) {
+                            skin.setImage(img);
+                        }
+                    });
                 } catch (Exception ignored) {
                     // Fall back to the initial label
                 }
@@ -1165,6 +1167,7 @@ public class LauncherUI extends Application {
 
         Label playerName = new Label(account != null ? accountLabel.getText() : "Not signed in");
         playerName.getStyleClass().add("player-name");
+        playerName.setMinWidth(160);
 
         Label playerStatus = new Label(account != null ? "Online" : "Offline");
         playerStatus.getStyleClass().add(account != null ? "player-online" : "player-offline");
