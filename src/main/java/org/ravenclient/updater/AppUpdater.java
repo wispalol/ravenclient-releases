@@ -58,15 +58,22 @@ public final class AppUpdater {
             if (Files.isRegularFile(p) && p.getFileName().toString().endsWith(".jar")) {
                 return p.getParent();
             }
-            return p;
+            // jpackage app-image: exe is in RavenClient/, app.jar is in RavenClient/app/
+            Path exeDir = p;
+            if (Files.isRegularFile(exeDir.resolve("app/app.jar"))) {
+                return exeDir.resolve("app");
+            }
+            return exeDir;
         } catch (Exception e) {
             return Path.of(System.getProperty("user.dir"));
         }
     }
 
-    /** True when running from a packaged build (RavenClient.exe next to the jars). */
+    /** True when running from a packaged build (RavenClient.exe next to app/app.jar). */
     public static boolean isPackaged() {
-        return Files.isRegularFile(installDir().resolve("RavenClient.exe"));
+        Path dir = installDir();
+        return Files.isRegularFile(dir.getParent().resolve("RavenClient.exe"))
+            && Files.isRegularFile(dir.resolve("app.jar"));
     }
 
     /** Fetches the manifest. Returns null when the client is already up to date. */
@@ -151,7 +158,7 @@ public final class AppUpdater {
                 )
                 xcopy /E /Y /Q "%UPDATE%\\*" "%APP%\\" >nul
                 rmdir /S /Q "%UPDATE%"
-                start "" "%APP%\\RavenClient.exe"
+                start "" "%APP%\\..\\RavenClient.exe"
                 del "%~f0"
                 """;
     }

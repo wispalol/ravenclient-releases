@@ -404,7 +404,20 @@ public final class GameLauncher {
     private void addJvmArg(List<String> cmd, String raw, LaunchData data, Account account) {
         if (raw == null || raw.isBlank()) return;
         if (raw.equals("-cp") || raw.equals("${classpath}") || raw.startsWith("-Djava.library.path=")) return;
+        // --sun-misc-unsafe-memory-access and --enable-native-access require Java 23+; skip on older runtimes.
+        if (javaMajorRuntime() < 23 && (raw.startsWith("--sun-misc-unsafe-memory-access") || raw.startsWith("--enable-native-access"))) return;
         cmd.add(substitute(raw, data, account));
+    }
+
+    private static int javaMajorRuntime() {
+        try {
+            String v = System.getProperty("java.version", "21");
+            String[] parts = v.split("[.+\\-]");
+            int major = Integer.parseInt(parts[0]);
+            return major == 1 && parts.length > 1 ? Integer.parseInt(parts[1]) : major;
+        } catch (Exception e) {
+            return 21;
+        }
     }
 
     private String substitute(String input, LaunchData data, Account account) {

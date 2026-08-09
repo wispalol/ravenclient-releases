@@ -34,3 +34,6 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+# Stakpak session files
+.stakpak/session*
