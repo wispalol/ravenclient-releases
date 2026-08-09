@@ -6,7 +6,7 @@
 
     <groupId>org.ravenclient</groupId>
     <artifactId>ravenclient</artifactId>
-    <version>1.0.7</version>
+    <version>1.0.8</version>
     <name>RavenClient</name>
     <description>An open-source Minecraft launcher with Microsoft account support.</description>
 
@@ -90,6 +90,7 @@
                         </goals>
                         <configuration>
                             <target>
+                                <mkdir dir="${project.build.directory}/RavenClient"/>
                                 <copy file="${project.build.directory}/ravenclient-${project.version}-runnable.jar"
                                       tofile="${project.build.directory}/RavenClient/app.jar"/>
                             </target>
