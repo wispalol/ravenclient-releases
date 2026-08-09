@@ -386,19 +386,36 @@ public class ModBrowser {
     }
 
     private void loadIcon(ModSearch.Hit hit, ImageView icon, int size) {
-        if (hit.icon_url() == null || hit.icon_url().isBlank()) return;
-        pool.execute(() -> {
-            try {
-                Image img = new Image(hit.icon_url(), size, size, true, true, true);
-                Platform.runLater(() -> icon.setImage(img));
-            } catch (Exception ignored) {
-                // icon fails to load -> the colored placeholder stays visible
-            }
-        });
+        if (hit.icon_url() != null && !hit.icon_url().isBlank()) {
+            pool.execute(() -> {
+                try {
+                    Image img = new Image(hit.icon_url(), size, size, true, true, true);
+                    Platform.runLater(() -> icon.setImage(img));
+                } catch (Exception ignored) {
+                    loadGeneratedIcon(hit, icon, size);
+                }
+            });
+        } else {
+            loadGeneratedIcon(hit, icon, size);
+        }
     }
 
     private void loadIcon(ModSearch.Hit hit, ImageView icon) {
         loadIcon(hit, icon, 56);
+    }
+
+    private void loadGeneratedIcon(ModSearch.Hit hit, ImageView icon, int size) {
+        String name = hit.title() != null && !hit.title().isBlank() ? hit.title() : "Mod";
+        String encoded = name.replace(" ", "+");
+        String url = "https://ui-avatars.com/api/?name=" + encoded + "&background=7c5cff&color=fff&size=" + size + "&bold=true&format=png";
+        pool.execute(() -> {
+            try {
+                Image img = new Image(url, size, size, true, true);
+                Platform.runLater(() -> icon.setImage(img));
+            } catch (Exception ignored) {
+                // placeholder stays visible
+            }
+        });
     }
 
     private HBox buildActions(ModSearch.Hit hit) {
