@@ -1082,17 +1082,17 @@
 
 .player-avatar-placeholder {
     -fx-background-color: linear-gradient(135deg, #7c5cff, #5b8cff, #00d4ff);
-    -fx-background-radius: 16;
+    -fx-background-radius: 18;
     -fx-text-fill: #ffffff;
-    -fx-font-size: 30px;
+    -fx-font-size: 36px;
     -fx-font-weight: 700;
     -fx-alignment: center;
-    -fx-min-width: 76px;
-    -fx-min-height: 76px;
-    -fx-pref-width: 76px;
-    -fx-pref-height: 76px;
-    -fx-max-width: 76px;
-    -fx-max-height: 76px;
+    -fx-min-width: 100px;
+    -fx-min-height: 100px;
+    -fx-pref-width: 100px;
+    -fx-pref-height: 100px;
+    -fx-max-width: 100px;
+    -fx-max-height: 100px;
     -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.35), 12, 0, 0, 0);
 }
 

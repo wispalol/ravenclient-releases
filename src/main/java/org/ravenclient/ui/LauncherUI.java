@@ -1150,27 +1150,27 @@ public class LauncherUI extends Application {
     }
 
     private Node buildPlayerDisplay() {
-        VBox container = new VBox(12);
+        VBox container = new VBox(14);
         container.setAlignment(Pos.CENTER);
-        container.setPrefWidth(180);
-        container.setPadding(new Insets(12, 0, 12, 0));
+        container.setPrefWidth(220);
+        container.setPadding(new Insets(16, 0, 16, 0));
 
         StackPane avatarBox = new StackPane();
-        avatarBox.setMinSize(80, 80);
-        avatarBox.setPrefSize(80, 80);
-        avatarBox.setMaxSize(80, 80);
+        avatarBox.setMinSize(120, 120);
+        avatarBox.setPrefSize(120, 120);
+        avatarBox.setMaxSize(120, 120);
         avatarBox.getStyleClass().add("player-avatar-box");
 
         if (account != null && account.uuid() != null && !account.uuid().isBlank()) {
             ImageView skin = new ImageView();
-            skin.setFitWidth(80);
-            skin.setFitHeight(80);
+            skin.setFitWidth(120);
+            skin.setFitHeight(120);
             skin.setPreserveRatio(true);
             String uuid = account.uuid().replace("-", "");
-            String avatarUrl = "https://crafatar.com/avatars/" + uuid;
+            String avatarUrl = "https://minecraft-skins-api.com/head/" + uuid;
             pool.execute(() -> {
                 try {
-                    Image img = new Image(avatarUrl, 80, 80, true, true);
+                    Image img = new Image(avatarUrl, 120, 120, true, true);
                     Platform.runLater(() -> {
                         if (img.getWidth() > 0) {
                             skin.setImage(img);
@@ -1189,8 +1189,9 @@ public class LauncherUI extends Application {
 
         Label playerName = new Label(account != null ? accountLabel.getText() : "Not signed in");
         playerName.getStyleClass().add("player-name");
-        playerName.setMinWidth(160);
+        playerName.setMinWidth(180);
         playerName.setAlignment(Pos.CENTER);
+        playerName.setWrapText(true);
 
         Label playerStatus = new Label(account != null ? "Online" : "Offline");
         playerStatus.getStyleClass().add(account != null ? "player-online" : "player-offline");
