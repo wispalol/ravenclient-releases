@@ -33,6 +33,7 @@ import org.ravenclient.config.ProfileStore.Profile;
 import org.ravenclient.game.GameLauncher;
 import org.ravenclient.game.Loader;
 import org.ravenclient.game.LoaderMeta;
+import org.ravenclient.overlay.OverlayManager;
 import org.ravenclient.updater.AppUpdater;
 import org.ravenclient.updater.ClientVersion;
 import org.ravenclient.updater.UpdateManifest;
@@ -79,6 +80,7 @@ public class LauncherUI extends Application {
     private final StackPane pageContainer = new StackPane();
     private Account account;
     private Process gameProcess;
+    private OverlayManager overlayManager;
     private Dialog<Void> deviceDialog;
     private boolean busy;
     private GameLauncher.LaunchData currentLaunchData;
@@ -1681,6 +1683,7 @@ public class LauncherUI extends Application {
                 currentLaunchData = data;
                 Process process = gl.launch(data, account);
                 gameProcess = process;
+                overlayManager = new OverlayManager(config.launcherDir, process);
                 Platform.runLater(() -> {
                     setStatus("Minecraft is starting...");
                     log("Minecraft launched (PID " + process.pid() + ").");
@@ -1773,6 +1776,9 @@ public class LauncherUI extends Application {
 
     @Override
     public void stop() {
+        if (overlayManager != null) {
+            try { overlayManager.shutdown(); } catch (Exception ignored) {}
+        }
         pool.shutdownNow();
     }
 
