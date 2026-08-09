@@ -68,7 +68,7 @@
                             <mainClass>org.ravenclient.RavenClient</mainClass>
                             <name>RavenClient</name>
                             <displayName>RavenClient</displayName>
-                            <version>1.0.0</version>
+                            <version>${project.version}</version>
                             <organizationName>RavenClient</organizationName>
                             <bundleJre>true</bundleJre>
                             <customizedJre>false</customizedJre>
