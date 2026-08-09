@@ -69,10 +69,12 @@ public final class JavaRuntime {
         // Fall back to the launcher's bundled JRE (packaged with jpackage) if it satisfies requirements
         Path bundled = bundledRuntime();
         if (bundled != null && Files.isRegularFile(bundled)) {
-            if (listener != null) {
-                listener.log("Using bundled launcher JRE (Java " + localMajor() + ")");
+            if (localMajor() >= required) {
+                if (listener != null) {
+                    listener.log("Using bundled launcher JRE (Java " + localMajor() + ")");
+                }
+                return bundled;
             }
-            return bundled;
         }
 
         String platform = platformKey();
