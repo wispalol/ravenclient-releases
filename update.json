@@ -1,6 +1,6 @@
 {
-    "version":  "1.0.11",
-    "notes":  "RavenClient 1.0.11 release.",
-    "url":  "https://github.com/wispalol/ravenclient-releases/releases/download/v1.0.11/RavenClient-update-1.0.11.zip",
-    "sha256":  "f3e449e051c448cee45fbc8467702dc3fd9040c71419e0d36b2ddd5c4086d0a3"
+    "version":  "1.0.12",
+    "notes":  "Enhanced UI with animations and visual polish - keyframe animations, pulsing glows, smooth page transitions, spinner indicator, and upgraded buttons/cards/progress bar.",
+    "url":  "https://github.com/wispalol/ravenclient-releases/releases/download/v1.0.12/RavenClient-update-1.0.12.zip",
+    "sha256": "06703C0514D665929A10A742C75AECF1E2A99AA1A5FDC54A5320ABC2F6FAEA2A"
 }
