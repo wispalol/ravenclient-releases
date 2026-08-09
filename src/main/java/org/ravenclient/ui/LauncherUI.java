@@ -1305,17 +1305,71 @@ public class LauncherUI extends Application {
         Label title = new Label("Settings");
         title.getStyleClass().add("page-title");
 
-        VBox form = new VBox(14);
+        VBox form = new VBox(16);
         form.setPadding(new Insets(22, 32, 22, 32));
 
+        // Memory panel
         VBox memCard = new VBox(10);
         memCard.getStyleClass().add("panel");
-        Label memLabelTitle = new Label("Memory allocation");
-        memLabelTitle.getStyleClass().add("panel-title");
-        HBox memRow = new HBox(12, new Label("Memory:"), memorySlider, memoryLabel);
+        Label memTitle = new Label("Memory");
+        memTitle.getStyleClass().add("panel-title");
+        HBox memRow = new HBox(12, new Label("RAM:"), memorySlider, memoryLabel);
         memRow.setAlignment(Pos.CENTER_LEFT);
-        memCard.getChildren().addAll(memLabelTitle, memRow);
+        memCard.getChildren().addAll(memTitle, memRow);
 
+        // Window panel
+        VBox winCard = new VBox(10);
+        winCard.getStyleClass().add("panel");
+        Label winTitle = new Label("Window");
+        winTitle.getStyleClass().add("panel-title");
+        TextField widthField = new TextField(String.valueOf(config.windowWidth));
+        widthField.setPrefWidth(90);
+        widthField.getStyleClass().add("modern-combobox");
+        TextField heightField = new TextField(String.valueOf(config.windowHeight));
+        heightField.setPrefWidth(90);
+        heightField.getStyleClass().add("modern-combobox");
+        ToggleButton fullscreenBtn = new ToggleButton("Fullscreen");
+        fullscreenBtn.getStyleClass().add("toggle-switch");
+        fullscreenBtn.setSelected(config.fullscreen);
+        HBox winRow = new HBox(10, new Label("Size:"), widthField, new Label("×"), heightField, fullscreenBtn);
+        winRow.setAlignment(Pos.CENTER_LEFT);
+        winCard.getChildren().addAll(winTitle, winRow);
+
+        // Behavior panel
+        VBox behaviorCard = new VBox(10);
+        behaviorCard.getStyleClass().add("panel");
+        Label behaviorTitle = new Label("Behavior");
+        behaviorTitle.getStyleClass().add("panel-title");
+        ToggleButton discordBtn = new ToggleButton("Discord Rich Presence");
+        discordBtn.getStyleClass().add("toggle-switch");
+        discordBtn.setSelected(config.discordRpc);
+        ToggleButton autoUpdateBtn = new ToggleButton("Auto-update on startup");
+        autoUpdateBtn.getStyleClass().add("toggle-switch");
+        autoUpdateBtn.setSelected(config.autoUpdate);
+        ToggleButton launchOnStartupBtn = new ToggleButton("Launch on system startup");
+        launchOnStartupBtn.getStyleClass().add("toggle-switch");
+        launchOnStartupBtn.setSelected(config.launchOnStartup);
+        VBox toggles = new VBox(8, discordBtn, autoUpdateBtn, launchOnStartupBtn);
+        behaviorCard.getChildren().addAll(behaviorTitle, toggles);
+
+        // Advanced panel
+        VBox advancedCard = new VBox(10);
+        advancedCard.getStyleClass().add("panel");
+        Label advancedTitle = new Label("Advanced");
+        advancedTitle.getStyleClass().add("panel-title");
+        Label jvmLabel = new Label("JVM arguments:");
+        jvmLabel.getStyleClass().add("field-label");
+        TextField jvmField = new TextField(config.jvmArgs);
+        jvmField.setPromptText("e.g. -XX:+UnlockExperimentalVMOptions");
+        jvmField.getStyleClass().add("search-box");
+        Label gameLabel = new Label("Game arguments:");
+        gameLabel.getStyleClass().add("field-label");
+        TextField gameField = new TextField(config.gameArgs);
+        gameField.setPromptText("e.g. --fullscreen");
+        gameField.getStyleClass().add("search-box");
+        advancedCard.getChildren().addAll(advancedTitle, jvmLabel, jvmField, gameLabel, gameField);
+
+        // Actions panel
         VBox actionsCard = new VBox(10);
         actionsCard.getStyleClass().add("panel");
         Label actionsTitle = new Label("Actions");
@@ -1328,6 +1382,7 @@ public class LauncherUI extends Application {
         openLogs.setOnAction(e -> openFolder(config.launcherDir));
         actionsCard.getChildren().addAll(actionsTitle, openGame, openLogs);
 
+        // Updates panel
         VBox updateCard = new VBox(10);
         updateCard.getStyleClass().add("panel");
         Label updateTitle = new Label("Updates");
@@ -1343,9 +1398,22 @@ public class LauncherUI extends Application {
 
         Button saveBtn = new Button("Save settings");
         saveBtn.getStyleClass().add("primary-button");
-        saveBtn.setOnAction(e -> saveSettings());
+        saveBtn.setOnAction(e -> {
+            config.memoryMb = (int) memorySlider.getValue() * 1024;
+            try {
+                config.windowWidth = Integer.parseInt(widthField.getText());
+                config.windowHeight = Integer.parseInt(heightField.getText());
+            } catch (Exception ignored) {}
+            config.fullscreen = fullscreenBtn.isSelected();
+            config.discordRpc = discordBtn.isSelected();
+            config.autoUpdate = autoUpdateBtn.isSelected();
+            config.launchOnStartup = launchOnStartupBtn.isSelected();
+            config.jvmArgs = jvmField.getText();
+            config.gameArgs = gameField.getText();
+            saveSettings();
+        });
 
-        form.getChildren().addAll(title, memCard, actionsCard, updateCard, saveBtn);
+        form.getChildren().addAll(title, memCard, winCard, behaviorCard, advancedCard, actionsCard, updateCard, saveBtn);
         ScrollPane scroll = new ScrollPane(form);
         scroll.setFitToWidth(true);
         return new StackPane(scroll);

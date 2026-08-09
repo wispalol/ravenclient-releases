@@ -8,6 +8,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -60,7 +61,7 @@ public class ModBrowser {
     private final Button goButton;
     private final Button addFileButton;
     private final Label statusLabel;
-    private final VBox resultsBox;
+    private final FlowPane resultsBox;
     private final Label pageLabel;
     private final Button prevButton;
     private final Button nextButton;
@@ -93,7 +94,10 @@ public class ModBrowser {
         statusLabel = new Label("Enter a search term or clear it for the full catalog, then press Search.");
         statusLabel.getStyleClass().add("muted");
         statusLabel.setWrapText(true);
-        resultsBox = new VBox(10);
+        resultsBox = new FlowPane();
+        resultsBox.setHgap(14);
+        resultsBox.setVgap(14);
+        resultsBox.setPadding(new Insets(4));
         pageLabel = new Label();
         pageLabel.getStyleClass().add("mod-stats");
         prevButton = new Button("<");
@@ -126,6 +130,7 @@ public class ModBrowser {
 
         ScrollPane scroll = new ScrollPane(resultsBox);
         scroll.setFitToWidth(true);
+        scroll.setFitToHeight(true);
         scroll.getStyleClass().add("mod-scroll");
 
         VBox root = new VBox(14, filterBar, statusLabel, scroll, footer);
@@ -234,7 +239,7 @@ public class ModBrowser {
                     statusLabel.setText("Showing " + rendered.size() + " of " + total + " mods.");
                 }
                 resultsBox.getChildren().clear();
-                for (ModSearch.Hit hit : rendered) resultsBox.getChildren().add(row(hit));
+                for (ModSearch.Hit hit : rendered) resultsBox.getChildren().add(gridCard(hit));
                 goButton.setDisable(false);
                 prevButton.setDisable(offset <= 0);
                 nextButton.setDisable(offset + PAGE_SIZE >= total || rendered.isEmpty());
@@ -324,6 +329,60 @@ public class ModBrowser {
         return card;
     }
 
+    private Node gridCard(ModSearch.Hit hit) {
+        VBox card = new VBox(8);
+        card.getStyleClass().add("mod-card-grid");
+        card.setPrefWidth(220);
+        card.setMaxWidth(220);
+
+        StackPane iconBox = new StackPane();
+        iconBox.setMinSize(64, 64);
+        iconBox.setPrefSize(64, 64);
+        iconBox.setMaxSize(64, 64);
+        iconBox.setAlignment(Pos.CENTER);
+
+        Label placeholder = new Label(initial(hit.title()));
+        placeholder.getStyleClass().add("mod-icon-placeholder");
+        placeholder.setStyle("-fx-background-color: " + iconColor(hit.title()) + ";");
+        placeholder.setMinSize(64, 64);
+        placeholder.setPrefSize(64, 64);
+        placeholder.setMaxSize(64, 64);
+        placeholder.setAlignment(Pos.CENTER);
+
+        ImageView icon = new ImageView();
+        icon.setFitWidth(64);
+        icon.setFitHeight(64);
+        icon.setPreserveRatio(true);
+        Rectangle rounded = new Rectangle(64, 64);
+        rounded.setArcWidth(18);
+        rounded.setArcHeight(18);
+        icon.setClip(rounded);
+
+        iconBox.getChildren().addAll(placeholder, icon);
+        loadIcon(hit, icon);
+
+        Label title = new Label(hit.title());
+        title.getStyleClass().add("mod-title");
+        title.setWrapText(true);
+        title.setMaxHeight(40);
+        title.setTextOverrun(OverrunStyle.ELLIPSIS);
+
+        Label author = new Label();
+        author.getStyleClass().add("mod-author");
+        String meta = (hit.author() == null || hit.author().isBlank() ? "" : hit.author())
+                + "  ·  " + formatNumber(hit.downloads()) + " downloads";
+        author.setText(meta);
+        author.setWrapText(true);
+        author.setMaxHeight(28);
+        author.setTextOverrun(OverrunStyle.ELLIPSIS);
+
+        HBox actions = buildActions(hit);
+        actions.setMaxWidth(Double.MAX_VALUE);
+
+        card.getChildren().addAll(iconBox, title, author, actions);
+        return card;
+    }
+
     private void loadIcon(ModSearch.Hit hit, ImageView icon) {
         if (hit.icon_url() == null || hit.icon_url().isBlank()) return;
         pool.execute(() -> {
@@ -374,7 +433,7 @@ public class ModBrowser {
 
         Button install = new Button("Install");
         install.getStyleClass().add("mod-install-button");
-        install.setPrefWidth(92);
+        install.setMaxWidth(Double.MAX_VALUE);
         install.setOnAction(e -> install(hit, versionCombo.getValue(), install));
         box.getChildren().add(install);
         return box;

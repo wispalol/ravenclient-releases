@@ -766,7 +766,7 @@
     -fx-border-color: rgba(255, 255, 255, 0.05);
     -fx-border-radius: 16;
     -fx-border-width: 1;
-    -fx-padding: 16;
+    -fx-padding: 14;
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.4), 14, 0, 0, 3);
     -fx-transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -777,6 +777,24 @@
     -fx-transform: translateY(-5px) scale(1.02);
     -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.12), 18, 0, 0, 4),
                 dropshadow(gaussian, rgba(0, 212, 255, 0.1), 18, 0, 0, 4);
+}
+
+.mod-card-grid {
+    -fx-background-color: rgba(18, 16, 32, 0.75);
+    -fx-background-radius: 16;
+    -fx-border-color: rgba(255, 255, 255, 0.05);
+    -fx-border-radius: 16;
+    -fx-border-width: 1;
+    -fx-padding: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 12, 0, 0, 2);
+    -fx-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mod-card-grid:hover {
+    -fx-background-color: rgba(22, 20, 40, 0.9);
+    -fx-border-color: rgba(124, 92, 255, 0.4);
+    -fx-transform: translateY(-4px) scale(1.03);
+    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.15), 16, 0, 0, 4);
 }
 
 .mod-title {
@@ -1217,4 +1235,29 @@
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 22, 0, 0, 6),
                 dropshadow(gaussian, rgba(124, 92, 255, 0.12), 30, 0, 0, 0);
     -fx-transform: translateY(-4px) scale(1.01);
+}
+
+.toggle-switch {
+    -fx-background-color: rgba(26, 24, 48, 0.8);
+    -fx-background-radius: 20;
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-radius: 20;
+    -fx-border-width: 1;
+    -fx-padding: 6 16 6 16;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #8a8d9c;
+    -fx-cursor: hand;
+    -fx-transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.toggle-switch:selected {
+    -fx-background-color: rgba(124, 92, 255, 0.25);
+    -fx-border-color: #7c5cff;
+    -fx-text-fill: #b8a9ff;
+}
+
+.settings-grid {
+    -fx-hgap: 16;
+    -fx-vgap: 12;
 }

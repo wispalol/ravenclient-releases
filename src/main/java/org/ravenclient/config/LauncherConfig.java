@@ -17,6 +17,15 @@ public final class LauncherConfig {
     public String selectedVersion = null;
     public String selectedProfile = null;
 
+    public int windowWidth = 1280;
+    public int windowHeight = 720;
+    public boolean fullscreen = false;
+    public boolean discordRpc = true;
+    public boolean autoUpdate = true;
+    public boolean launchOnStartup = false;
+    public String jvmArgs = "";
+    public String gameArgs = "";
+
     private LauncherConfig(Path launcherDir) {
         this.launcherDir = launcherDir;
         this.gameDir = launcherDir.resolve("minecraft");
@@ -37,6 +46,14 @@ public final class LauncherConfig {
             if (node.hasNonNull("selectedProfile") && !node.get("selectedProfile").asText().isEmpty()) {
                 cfg.selectedProfile = node.get("selectedProfile").asText();
             }
+            if (node.hasNonNull("windowWidth")) cfg.windowWidth = node.get("windowWidth").asInt(1280);
+            if (node.hasNonNull("windowHeight")) cfg.windowHeight = node.get("windowHeight").asInt(720);
+            if (node.hasNonNull("fullscreen")) cfg.fullscreen = node.get("fullscreen").asBoolean(false);
+            if (node.hasNonNull("discordRpc")) cfg.discordRpc = node.get("discordRpc").asBoolean(true);
+            if (node.hasNonNull("autoUpdate")) cfg.autoUpdate = node.get("autoUpdate").asBoolean(true);
+            if (node.hasNonNull("launchOnStartup")) cfg.launchOnStartup = node.get("launchOnStartup").asBoolean(false);
+            if (node.hasNonNull("jvmArgs")) cfg.jvmArgs = node.get("jvmArgs").asText("");
+            if (node.hasNonNull("gameArgs")) cfg.gameArgs = node.get("gameArgs").asText("");
         }
         return cfg;
     }
@@ -46,6 +63,14 @@ public final class LauncherConfig {
         node.put("memoryMb", memoryMb);
         node.put("selectedVersion", selectedVersion == null ? "" : selectedVersion);
         node.put("selectedProfile", selectedProfile == null ? "" : selectedProfile);
+        node.put("windowWidth", windowWidth);
+        node.put("windowHeight", windowHeight);
+        node.put("fullscreen", fullscreen);
+        node.put("discordRpc", discordRpc);
+        node.put("autoUpdate", autoUpdate);
+        node.put("launchOnStartup", launchOnStartup);
+        node.put("jvmArgs", jvmArgs == null ? "" : jvmArgs);
+        node.put("gameArgs", gameArgs == null ? "" : gameArgs);
         Files.write(launcherDir.resolve(CONFIG_FILE),
                 Json.mapper().writerWithDefaultPrettyPrinter().writeValueAsBytes(node));
     }
