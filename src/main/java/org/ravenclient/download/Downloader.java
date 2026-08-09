@@ -52,7 +52,18 @@ public final class Downloader {
                         + " (expected " + entry.sha1() + ", got " + actual + ")");
             }
         }
-        Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
+        // On Windows, the target file might be locked by another process (e.g., Minecraft).
+        // Try the move, and if it fails, delete first and then move.
+        try {
+            Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            if (e.getMessage() != null && e.getMessage().contains("being used by another process")) {
+                Files.deleteIfExists(target);
+                Files.move(tmp, target);
+            } else {
+                throw e;
+            }
+        }
     }
 
     public static void downloadAll(List<Entry> entries, int threads, Progress progress) throws IOException {
