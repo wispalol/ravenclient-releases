@@ -19,8 +19,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
+import java.io.InputStreamReader;import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -197,6 +196,9 @@ public final class GameLauncher {
         Path modsDir = versionDir.resolve("mods");
         Files.createDirectories(modsDir);
 
+        // Install bundled RavenClient HUD mod
+        installBundledMod(versionDir);
+
         // Loaders only read mods from the game's root mods/ folder, so materialize the
         // profile's mods there (and drop ones we placed for a previously launched profile).
         syncMods(versionDir);
@@ -256,6 +258,26 @@ public final class GameLauncher {
     }
 
     private record ModsSync(List<String> files) {
+    }
+
+    /**
+     * Copies the bundled RavenClient HUD mod from the launcher's resources into the
+     * version-specific mods directory so it loads with the game.
+     */
+    private void installBundledMod(Path versionDir) throws IOException {
+        Path modsDir = versionDir.resolve("mods");
+        Path modFile = modsDir.resolve("raven-client-hud.jar");
+        if (Files.exists(modFile)) return; // already installed
+
+        // Look for the mod jar in the launcher's classpath/resources
+        try (InputStream modStream = getClass().getResourceAsStream("/raven-client-hud.jar")) {
+            if (modStream != null) {
+                Files.copy(modStream, modFile, StandardCopyOption.REPLACE_EXISTING);
+                listener.log("RavenClient HUD mod installed: raven-client-hud.jar");
+            }
+        } catch (Exception ignored) {
+            // No bundled mod - skip silently
+        }
     }
 
     private void downloadAssets(AssetIndexInfo info, Path assetsRoot) throws IOException {

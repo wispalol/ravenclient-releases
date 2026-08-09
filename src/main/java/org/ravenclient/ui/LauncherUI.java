@@ -1239,7 +1239,12 @@ public class LauncherUI extends Application {
         Label info = new Label("Capes, particles and emotes are coming in a future update. They work alongside Fabric mods like OptiFine or Entity Model Features once installed from the Mods tab.");
         info.setWrapText(true);
         info.getStyleClass().add("muted");
-        VBox body = new VBox(16, title, info);
+        
+        Label hudInfo = new Label("RavenClient HUD: In-game overlay (Right Shift to open settings) with FPS counter, ping, coordinates, and customizable positioning. Available in v1.0.14+.");
+        hudInfo.setWrapText(true);
+        hudInfo.getStyleClass().add("muted");
+        
+        VBox body = new VBox(16, title, info, hudInfo);
         body.setPadding(new Insets(24, 36, 24, 36));
         return new StackPane(new ScrollPane(body));
     }
