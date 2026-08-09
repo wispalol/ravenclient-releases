@@ -2,6 +2,7 @@ package org.ravenclient.game;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.ravenclient.download.Downloader;
+import org.ravenclient.updater.AppUpdater;
 import org.ravenclient.util.Http;
 import org.ravenclient.util.Json;
 
@@ -39,6 +40,7 @@ public final class JavaRuntime {
      * Returns the Java executable to use for the given version requirements.
      * Uses the local JVM when it satisfies the requirement, otherwise downloads
      * the matching Mojang-bundled runtime into {@code gameDir/runtime}.
+     * Falls back to the launcher's own bundled JRE when running from a packaged app.
      */
     public static Path resolve(Path gameDir, JsonNode javaVersion, GameLauncher.Listener listener) throws IOException {
         int required = javaVersion != null ? javaVersion.path("majorVersion").asInt(0) : 0;
@@ -56,6 +58,15 @@ public final class JavaRuntime {
                 listener.log("Using local Java " + localMajor() + " (version requires Java " + required + ")");
             }
             return localJava();
+        }
+
+        // Fall back to the launcher's bundled JRE (packaged with jpackage) if it satisfies requirements
+        Path bundled = bundledRuntime();
+        if (bundled != null && Files.isRegularFile(bundled)) {
+            if (listener != null) {
+                listener.log("Using bundled launcher JRE (Java " + localMajor() + ")");
+            }
+            return bundled;
         }
 
         String platform = platformKey();
@@ -84,6 +95,17 @@ public final class JavaRuntime {
         if (!Files.isRegularFile(java)) throw new IOException("Installed Java runtime is incomplete: " + java);
         if (listener != null) listener.log("Using Mojang Java runtime " + component + " at " + java);
         return java;
+    }
+
+    /**
+     * Returns the path to the launcher's own bundled JRE (created by jpackage),
+     * or null if not running from a packaged distribution.
+     */
+    private static Path bundledRuntime() {
+        Path installDir = AppUpdater.installDir();
+        Path runtime = installDir.resolve("runtime").resolve("bin").resolve(
+                osId().equals("windows") ? "java.exe" : "java");
+        return Files.isRegularFile(runtime) ? runtime : null;
     }
 
     private static void downloadFiles(JsonNode files, Path root, GameLauncher.Listener listener) throws IOException {
