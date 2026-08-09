@@ -39,9 +39,9 @@ public class OverlayManager {
     private final HudRenderer renderer;
     private final ScheduledExecutorService keybindPoller;
 
-    private boolean guiOpen = false;
-    private boolean editMode = false;
-    private boolean rshiftWasDown = false;
+    private volatile boolean guiOpen = false;
+    private volatile boolean editMode = false;
+    private volatile boolean rshiftWasDown = false;
     private Process gameProcess;
 
     public static Path configDir() { return configDirectory; }
@@ -109,6 +109,7 @@ public class OverlayManager {
         overlayStage.setWidth(sw);
         overlayStage.setHeight(sh);
         overlayStage.show();
+        System.out.println("[RAVEN] Overlay stage shown, size=" + sw + "x" + sh);
 
         setClickThrough(true);
 
@@ -125,16 +126,23 @@ public class OverlayManager {
             return t;
         });
         keybindPoller.scheduleAtFixedRate(this::pollKeybind, 500, 50, TimeUnit.MILLISECONDS);
+        System.out.println("[RAVEN] OverlayManager started, polling RSHIFT");
     }
 
     private void pollKeybind() {
         try {
             boolean rshiftDown = isKeyDown(0xA1); // VK_RSHIFT
+            if (rshiftDown != rshiftWasDown) {
+                System.out.println("[RAVEN] RSHIFT raw=" + rshiftDown + " prev=" + rshiftWasDown + " gui=" + guiOpen + " edit=" + editMode);
+            }
             if (rshiftDown && !rshiftWasDown) {
+                System.out.println("[RAVEN] RSHIFT pressed, toggling GUI");
                 Platform.runLater(this::toggleGui);
             }
             rshiftWasDown = rshiftDown;
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            System.out.println("[RAVEN] poll error: " + e.getMessage());
+        }
     }
 
     private void startLogParser() {
@@ -250,11 +258,13 @@ public class OverlayManager {
         try {
             return (User32.INSTANCE.GetAsyncKeyState(vk) & 0x8000) != 0;
         } catch (Exception e) {
+            System.out.println("[RAVEN] GetAsyncKeyState error: " + e.getMessage());
             return false;
         }
     }
 
     private void toggleGui() {
+        System.out.println("[RAVEN] toggleGui called, editMode=" + editMode + " guiOpen=" + guiOpen);
         if (editMode) {
             closeEditor();
         } else if (guiOpen) {
@@ -339,8 +349,10 @@ public class OverlayManager {
     }
 
     public void shutdown() {
-        keybindPoller.shutdownNow();
-        renderer.stop();
-        Platform.runLater(overlayStage::close);
+        if (keybindPoller != null) keybindPoller.shutdownNow();
+        if (renderer != null) renderer.stop();
+        Platform.runLater(() -> {
+            if (overlayStage != null) overlayStage.close();
+        });
     }
 }
