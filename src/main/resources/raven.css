@@ -1279,3 +1279,344 @@
     -fx-hgap: 16;
     -fx-vgap: 12;
 }
+
+/* --- Enhanced dialogs ------------------------------------------------------ */
+
+.dialog-backdrop {
+    -fx-background-color: rgba(0, 0, 0, 0.55);
+    -fx-background-insets: 0;
+}
+
+.glass-dialog {
+    -fx-background-color: rgba(18, 16, 32, 0.92);
+    -fx-background-radius: 18;
+    -fx-border-color: rgba(124, 92, 255, 0.35);
+    -fx-border-radius: 18;
+    -fx-border-width: 1;
+    -fx-padding: 22;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.65), 30, 0, 0, 12),
+                dropshadow(gaussian, rgba(124, 92, 255, 0.18), 35, 0, 0, 0);
+}
+
+.dialog-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: 800;
+    -fx-text-fill: linear-gradient(to right, #eaeaea, #b8a9ff, #7c5cff);
+    -fx-padding: 0 0 12 0;
+}
+
+.dialog-message {
+    -fx-font-size: 13px;
+    -fx-text-fill: #8a8d9c;
+    -fx-line-spacing: 1.3;
+    -fx-padding: 0 0 16 0;
+}
+
+.dialog-input {
+    -fx-background-color: rgba(22, 20, 40, 0.7);
+    -fx-background-radius: 10;
+    -fx-border-color: rgba(255, 255, 255, 0.06);
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-text-fill: #eaeaea;
+    -fx-prompt-text-fill: #5a5d6e;
+    -fx-padding: 10 14 10 14;
+}
+
+.dialog-input:focused {
+    -fx-border-color: #7c5cff;
+    -fx-background-color: rgba(26, 24, 48, 0.9);
+    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.25), 10, 0, 0, 0);
+}
+
+.dialog-option {
+    -fx-background-color: rgba(22, 20, 40, 0.6);
+    -fx-background-radius: 12;
+    -fx-border-color: rgba(255, 255, 255, 0.06);
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-text-fill: #eaeaea;
+    -fx-font-size: 13px;
+    -fx-padding: 10 14 10 14;
+    -fx-cursor: hand;
+}
+
+.dialog-option:hover {
+    -fx-border-color: #7c5cff;
+    -fx-background-color: rgba(124, 92, 255, 0.1);
+}
+
+.dialog-option:selected {
+    -fx-background-color: linear-gradient(to right, #7c5cff, #5b8cff);
+    -fx-border-color: transparent;
+    -fx-text-fill: #ffffff;
+}
+
+/* --- Animations ------------------------------------------------------------ */
+
+@keyframes fadeInUp {
+    from { -fx-opacity: 0; -fx-translate-y: 12; }
+    to   { -fx-opacity: 1; -fx-translate-y: 0; }
+}
+
+.animate-in {
+    -fx-opacity: 0;
+    -fx-translate-y: 12;
+    -fx-animation: fadeInUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes pulse-glow {
+    0%, 100% { -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.35), 14, 0, 0, 0); }
+    50%      { -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.7), 22, 0, 0, 0); }
+}
+
+.pulse-glow {
+    -fx-animation: pulse-glow 2.4s ease-in-out infinite;
+}
+
+/* --- Scrollbar polish ------------------------------------------------------ */
+
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.scroll-pane > .corner {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: rgba(124, 92, 255, 0.35);
+    -fx-background-radius: 8;
+    -fx-transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: rgba(124, 92, 255, 0.75);
+    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.4), 10, 0, 0, 0);
+}
+
+.scroll-bar .track {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .increment-button, .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.scroll-bar .increment-arrow, .scroll-bar .decrement-arrow {
+    -fx-background-color: transparent;
+}
+
+/* --- Tooltip polish -------------------------------------------------------- */
+
+.tooltip {
+    -fx-background-color: rgba(18, 16, 32, 0.95);
+    -fx-text-fill: #eaeaea;
+    -fx-font-size: 12px;
+    -fx-background-radius: 10;
+    -fx-border-color: rgba(124, 92, 255, 0.35);
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-padding: 8 12 8 12;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.6), 16, 0, 0, 4);
+}
+
+/* --- ComboBox / ListView polish -------------------------------------------- */
+
+.combo-box-popup .list-view {
+    -fx-background-color: rgba(18, 16, 32, 0.96);
+    -fx-border-color: rgba(124, 92, 255, 0.35);
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.25), 20, 0, 0, 0);
+}
+
+.combo-box-popup .list-view .list-cell {
+    -fx-background-color: rgba(22, 20, 40, 0.9);
+    -fx-text-fill: #eaeaea;
+    -fx-padding: 9 16 9 16;
+    -fx-font-size: 12px;
+}
+
+.combo-box-popup .list-view .list-cell:hover {
+    -fx-background-color: rgba(42, 38, 75, 0.95);
+    -fx-text-fill: #b8a9ff;
+}
+
+.combo-box-popup .list-view .list-cell:selected {
+    -fx-background-color: rgba(124, 92, 255, 0.25);
+    -fx-text-fill: #ffffff;
+}
+
+/* --- Context menu polish --------------------------------------------------- */
+
+.context-menu {
+    -fx-background-color: rgba(18, 16, 32, 0.96);
+    -fx-border-color: rgba(124, 92, 255, 0.35);
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.6), 20, 0, 0, 4);
+}
+
+.menu-item {
+    -fx-background-color: transparent;
+    -fx-text-fill: #eaeaea;
+    -fx-padding: 8 14 8 14;
+}
+
+.menu-item:hover {
+    -fx-background-color: rgba(124, 92, 255, 0.18);
+    -fx-text-fill: #ffffff;
+}
+
+.menu-item > .accelerator {
+    -fx-text-fill: #5a5d6e;
+}
+
+/* --- Tab pane polish ------------------------------------------------------- */
+
+.tab-pane {
+    -fx-background-color: transparent;
+}
+
+.tab-pane .tab-header-area {
+    -fx-padding: 8 8 0 8;
+}
+
+.tab-pane .tab-header-background {
+    -fx-background-color: transparent;
+}
+
+.tab {
+    -fx-background-color: rgba(22, 20, 40, 0.7);
+    -fx-background-radius: 10 10 0 0;
+    -fx-border-color: rgba(255, 255, 255, 0.04);
+    -fx-border-width: 1 1 0 1;
+    -fx-padding: 8 18 8 18;
+}
+
+.tab:selected {
+    -fx-background-color: rgba(124, 92, 255, 0.18);
+    -fx-border-color: rgba(124, 92, 255, 0.5);
+    -fx-text-fill: #ffffff;
+}
+
+.tab-label {
+    -fx-text-fill: #8a8d9c;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+}
+
+.tab:selected .tab-label {
+    -fx-text-fill: #ffffff;
+}
+
+.tab-pane .tab-content-area {
+    -fx-background-color: rgba(18, 16, 32, 0.6);
+    -fx-background-radius: 0 0 14 14;
+    -fx-border-color: rgba(124, 92, 255, 0.2);
+    -fx-border-radius: 0 0 14 14;
+    -fx-border-width: 0 1 1 1;
+    -fx-padding: 14;
+}
+
+/* --- Separator polish ------------------------------------------------------ */
+
+.separator {
+    -fx-border-color: rgba(255, 255, 255, 0.06);
+    -fx-border-width: 1;
+}
+
+.separator:vertical {
+    -fx-border-width: 0 1 0 0;
+}
+
+/* --- Misc ------------------------------------------------------------------ */
+
+.noise-bg {
+    -fx-background-color: rgba(18, 16, 32, 0.55);
+    -fx-background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+.gradient-border {
+    -fx-border-color: linear-gradient(to right, #7c5cff, #5b8cff, #00d4ff);
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+}
+
+.title-gradient {
+    -fx-text-fill: linear-gradient(to right, #eaeaea, #b8a9ff, #7c5cff);
+    -fx-font-weight: 800;
+}
+
+.subtitle-gradient {
+    -fx-text-fill: linear-gradient(to right, #7c5cff, #5b8cff, #00d4ff);
+    -fx-font-weight: 700;
+}
+
+.hover-lift {
+    -fx-transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+    -fx-transform: translateY(-4px) scale(1.01);
+    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.18), 20, 0, 0, 6);
+}
+
+.text-gradient {
+    -fx-text-fill: linear-gradient(to right, #eaeaea, #b8a9ff, #7c5cff);
+}
+
+.badge-gradient {
+    -fx-background-color: linear-gradient(to right, rgba(124, 92, 255, 0.35), rgba(91, 140, 255, 0.35));
+    -fx-text-fill: #ffffff;
+    -fx-background-radius: 8;
+    -fx-padding: 4 10 4 10;
+    -fx-font-size: 10px;
+    -fx-font-weight: 800;
+    -fx-letter-spacing: 0.5px;
+}
+
+/* --- Mod polish ------------------------------------------------------------ */
+
+.mod-card-grid {
+    -fx-background-color: rgba(18, 16, 32, 0.75);
+    -fx-background-radius: 16;
+    -fx-border-color: rgba(255, 255, 255, 0.05);
+    -fx-border-radius: 16;
+    -fx-border-width: 1;
+    -fx-padding: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.4), 12, 0, 0, 2);
+    -fx-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mod-card-grid:hover {
+    -fx-background-color: rgba(22, 20, 40, 0.9);
+    -fx-border-color: rgba(124, 92, 255, 0.4);
+    -fx-transform: translateY(-4px) scale(1.03);
+    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.15), 16, 0, 0, 4);
+}
+
+/* --- Boot polish ----------------------------------------------------------- */
+
+.boot-overlay {
+    -fx-background-color: rgba(11, 12, 16, 0.97);
+}
+
+.boot-background {
+    -fx-background-color: radial-gradient(focus-distance 30%, focus-angle 45deg, rgba(124, 92, 255, 0.18), rgba(0, 212, 255, 0.08), rgba(0, 0, 0, 0.92));
+}
+
+.boot-particles {
+    -fx-background-color: transparent;
+}

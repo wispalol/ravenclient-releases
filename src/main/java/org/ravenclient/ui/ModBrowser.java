@@ -22,6 +22,8 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
+import javafx.animation.FadeTransition;
+import javafx.util.Duration;
 import org.ravenclient.config.LauncherConfig;
 import org.ravenclient.game.Loader;
 import org.ravenclient.mod.ModManager;
@@ -260,6 +262,8 @@ public class ModBrowser {
     private Node row(ModSearch.Hit hit) {
         VBox card = new VBox(10);
         card.getStyleClass().add("mod-card");
+        card.setOpacity(0);
+        card.setTranslateY(6);
 
         HBox body = new HBox(14);
         body.setAlignment(Pos.CENTER_LEFT);
@@ -332,6 +336,14 @@ public class ModBrowser {
 
         body.getChildren().addAll(iconBox, info, spacer, actions);
         card.getChildren().add(body);
+
+        FadeTransition ft = new FadeTransition(Duration.millis(260), card);
+        ft.setFromValue(0);
+        ft.setToValue(1);
+        ft.setInterpolator(javafx.animation.Interpolator.EASE_OUT);
+        ft.play();
+        card.setTranslateY(0);
+
         return card;
     }
 
@@ -340,6 +352,8 @@ public class ModBrowser {
         card.getStyleClass().add("mod-card-grid");
         card.setPrefWidth(220);
         card.setMaxWidth(220);
+        card.setOpacity(0);
+        card.setTranslateY(8);
 
         StackPane iconBox = new StackPane();
         iconBox.setMinSize(64, 64);
@@ -387,6 +401,15 @@ public class ModBrowser {
         actions.setMaxWidth(Double.MAX_VALUE);
 
         card.getChildren().addAll(iconBox, title, author, actions);
+
+        FadeTransition ft = new FadeTransition(Duration.millis(320), card);
+        ft.setFromValue(0);
+        ft.setToValue(1);
+        ft.setInterpolator(javafx.animation.Interpolator.EASE_OUT);
+        ft.setDelay(Duration.millis(40));
+        ft.play();
+        card.setTranslateY(0);
+
         return card;
     }
 

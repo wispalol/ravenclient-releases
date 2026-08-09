@@ -193,18 +193,20 @@ public class LauncherUI extends Application {
             setStatus("Close Minecraft before installing an update.");
             return;
         }
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Update available");
-        alert.setHeaderText("RavenClient " + m.version() + " is available");
-        String notes = m.notes() == null || m.notes().isBlank() ? "" : "\n\n" + m.notes();
-        alert.setContentText("Update to version " + m.version()
-                + "? Your settings, accounts and profiles will be kept." + notes);
-        alert.initOwner(stage);
-        alert.getDialogPane().getStylesheets().add(getClass().getResource("/raven.css").toExternalForm());
+        VBox box = new VBox(10);
+        box.getChildren().addAll(
+                new Label("Update available") {{ getStyleClass().add("dialog-title"); }},
+                new Label("RavenClient " + m.version() + " is available\n\n" +
+                        (m.notes() == null || m.notes().isBlank() ? "" : m.notes() + "\n\n") +
+                        "Your settings, accounts and profiles will be kept.") {{
+                    getStyleClass().add("dialog-message"); setWrapText(true);
+                }}
+        );
+        javafx.scene.control.Dialog<ButtonType> d = glassDialog("Update available", box);
         ButtonType install = new ButtonType("Update now");
         ButtonType later = new ButtonType("Later", ButtonBar.ButtonData.CANCEL_CLOSE);
-        alert.getButtonTypes().setAll(install, later);
-        alert.showAndWait().ifPresent(bt -> {
+        d.getDialogPane().getButtonTypes().setAll(install, later);
+        d.showAndWait().ifPresent(bt -> {
             if (bt == install) installUpdate(m);
         });
     }
@@ -230,6 +232,37 @@ public class LauncherUI extends Application {
                 });
             }
         });
+    }
+
+    // --- polished dialogs ---------------------------------------------------
+
+    private <T> javafx.scene.control.Dialog<T> glassDialog(String title, Node content) {
+        javafx.scene.control.Dialog<T> dialog = new javafx.scene.control.Dialog<>();
+        dialog.setTitle(title);
+        dialog.initOwner(stage);
+        dialog.getDialogPane().getStyleClass().add("glass-dialog");
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getStylesheets().add(getClass().getResource("/raven.css").toExternalForm());
+        return dialog;
+    }
+
+    private void showGlassAlert(String title, String message, javafx.scene.control.ButtonType... buttons) {
+        VBox box = new VBox(10);
+        box.getChildren().addAll(
+                new Label(title) {{ getStyleClass().add("dialog-title"); }},
+                new Label(message) {{ getStyleClass().add("dialog-message"); setWrapText(true); }}
+        );
+        javafx.scene.control.Dialog<ButtonType> d = glassDialog(title, box);
+        d.getDialogPane().getButtonTypes().setAll(buttons);
+        d.showAndWait();
+    }
+
+    private void showGlassInfo(String title, String message) {
+        showGlassAlert(title, message, new ButtonType("OK", ButtonBar.ButtonData.OK_DONE));
+    }
+
+    private void showGlassError(String title, String message) {
+        showGlassAlert(title, message, new ButtonType("Close", ButtonBar.ButtonData.CANCEL_CLOSE));
     }
 
     // --- boot splash -------------------------------------------------------
@@ -279,32 +312,39 @@ public class LauncherUI extends Application {
         VBox box = (VBox) overlay;
         Label mark = (Label) ((StackPane) box.getChildren().get(1)).getChildren().get(0);
         Label title = (Label) box.getChildren().get(2);
+        Label tagline = (Label) box.getChildren().get(3);
         ProgressBar bar = (ProgressBar) box.getChildren().get(4);
         Label line = (Label) box.getChildren().get(5);
 
-        // Enhanced progress animation with multiple phases
+        mark.setOpacity(0);
+        title.setOpacity(0);
+        tagline.setOpacity(0);
+        bar.setOpacity(0);
+        line.setOpacity(0);
+
         Timeline progress = new Timeline(
+                new KeyFrame(Duration.ZERO, new KeyValue(bar.opacityProperty(), 0)),
+                new KeyFrame(Duration.millis(120), new KeyValue(bar.opacityProperty(), 1)),
                 new KeyFrame(Duration.ZERO, new KeyValue(bar.progressProperty(), 0)),
-                new KeyFrame(Duration.millis(800), new KeyValue(bar.progressProperty(), 0.3, Interpolator.EASE_IN)),
-                new KeyFrame(Duration.millis(1600), new KeyValue(bar.progressProperty(), 0.7, Interpolator.EASE_BOTH)),
+                new KeyFrame(Duration.millis(900), new KeyValue(bar.progressProperty(), 0.35, Interpolator.EASE_IN)),
+                new KeyFrame(Duration.millis(1800), new KeyValue(bar.progressProperty(), 0.75, Interpolator.EASE_BOTH)),
                 new KeyFrame(Duration.millis(2600), new KeyValue(bar.progressProperty(), 1, Interpolator.EASE_OUT)));
         progress.setOnFinished(e -> fadeOutBoot(overlay, sceneRoot));
         progress.play();
 
-        // Enhanced status line cycling with fade effect
         Timeline messages = new Timeline();
-        double t = 0;
+        double t = 180;
         for (int i = 1; i < BOOT_LINES.size(); i++) {
             final int idx = i;
             messages.getKeyFrames().add(new KeyFrame(
                     Duration.millis(t += 520), e -> {
-                        FadeTransition fade = new FadeTransition(Duration.millis(300), line);
+                        FadeTransition fade = new FadeTransition(Duration.millis(280), line);
                         fade.setFromValue(1.0);
-                        fade.setToValue(0.3);
+                        fade.setToValue(0.2);
                         fade.setOnFinished(f -> {
                             line.setText(BOOT_LINES.get(idx));
-                            FadeTransition fadeIn = new FadeTransition(Duration.millis(300), line);
-                            fadeIn.setFromValue(0.3);
+                            FadeTransition fadeIn = new FadeTransition(Duration.millis(280), line);
+                            fadeIn.setFromValue(0.2);
                             fadeIn.setToValue(1.0);
                             fadeIn.play();
                         });
@@ -313,38 +353,46 @@ public class LauncherUI extends Application {
         }
         messages.play();
 
-        // Enhanced logo pulse with rotation
         Timeline pulse = new Timeline(
                 new KeyFrame(Duration.ZERO,
-                        new KeyValue(mark.scaleXProperty(), 1),
-                        new KeyValue(mark.scaleYProperty(), 1),
-                        new KeyValue(mark.rotateProperty(), 0)),
-                new KeyFrame(Duration.millis(650),
-                        new KeyValue(mark.scaleXProperty(), 1.08, Interpolator.EASE_BOTH),
-                        new KeyValue(mark.scaleYProperty(), 1.08, Interpolator.EASE_BOTH),
-                        new KeyValue(mark.rotateProperty(), 2, Interpolator.EASE_BOTH)),
-                new KeyFrame(Duration.millis(1300),
+                        new KeyValue(mark.scaleXProperty(), 0.6),
+                        new KeyValue(mark.scaleYProperty(), 0.6),
+                        new KeyValue(mark.rotateProperty(), -6),
+                        new KeyValue(mark.opacityProperty(), 0)),
+                new KeyFrame(Duration.millis(500),
+                        new KeyValue(mark.scaleXProperty(), 1.06, Interpolator.EASE_OUT),
+                        new KeyValue(mark.scaleYProperty(), 1.06, Interpolator.EASE_OUT),
+                        new KeyValue(mark.rotateProperty(), 0, Interpolator.EASE_OUT),
+                        new KeyValue(mark.opacityProperty(), 1)),
+                new KeyFrame(Duration.millis(1100),
+                        new KeyValue(mark.scaleXProperty(), 1, Interpolator.EASE_BOTH),
+                        new KeyValue(mark.scaleYProperty(), 1, Interpolator.EASE_BOTH),
+                        new KeyValue(mark.rotateProperty(), 1, Interpolator.EASE_BOTH)),
+                new KeyFrame(Duration.millis(1700),
+                        new KeyValue(mark.scaleXProperty(), 1.06, Interpolator.EASE_BOTH),
+                        new KeyValue(mark.scaleYProperty(), 1.06, Interpolator.EASE_BOTH),
+                        new KeyValue(mark.rotateProperty(), -1, Interpolator.EASE_BOTH)),
+                new KeyFrame(Duration.millis(2300),
                         new KeyValue(mark.scaleXProperty(), 1, Interpolator.EASE_BOTH),
                         new KeyValue(mark.scaleYProperty(), 1, Interpolator.EASE_BOTH),
                         new KeyValue(mark.rotateProperty(), 0, Interpolator.EASE_BOTH)));
-        pulse.setCycleCount(Timeline.INDEFINITE);
+        pulse.setCycleCount(1);
         pulse.play();
 
-        // Enhanced title shimmer with color shift
-        Timeline glow = new Timeline(
-                new KeyFrame(Duration.ZERO, new KeyValue(title.opacityProperty(), 0.65)),
-                new KeyFrame(Duration.millis(800), new KeyValue(title.opacityProperty(), 1)),
-                new KeyFrame(Duration.millis(1600), new KeyValue(title.opacityProperty(), 0.65)));
-        glow.setCycleCount(Timeline.INDEFINITE);
-        glow.play();
-        
-        // Add subtle floating animation to background
-        Timeline backgroundFloat = new Timeline(
-                new KeyFrame(Duration.ZERO, new KeyValue(box.translateYProperty(), 0)),
-                new KeyFrame(Duration.millis(4000), new KeyValue(box.translateYProperty(), -5, Interpolator.SPLINE(0.5, 0.5, 0.5, 0.5))),
-                new KeyFrame(Duration.millis(8000), new KeyValue(box.translateYProperty(), 0, Interpolator.SPLINE(0.5, 0.5, 0.5, 0.5))));
-        backgroundFloat.setCycleCount(Timeline.INDEFINITE);
-        backgroundFloat.play();
+        Timeline titleAnim = new Timeline(
+                new KeyFrame(Duration.ZERO, new KeyValue(title.opacityProperty(), 0), new KeyValue(title.translateYProperty(), 10)),
+                new KeyFrame(Duration.millis(400), new KeyValue(title.opacityProperty(), 1), new KeyValue(title.translateYProperty(), 0)));
+        titleAnim.play();
+
+        Timeline tagAnim = new Timeline(
+                new KeyFrame(Duration.ZERO, new KeyValue(tagline.opacityProperty(), 0), new KeyValue(tagline.translateYProperty(), 8)),
+                new KeyFrame(Duration.millis(700), new KeyValue(tagline.opacityProperty(), 0.9), new KeyValue(tagline.translateYProperty(), 0)));
+        tagAnim.play();
+
+        Timeline lineAnim = new Timeline(
+                new KeyFrame(Duration.ZERO, new KeyValue(line.opacityProperty(), 0), new KeyValue(line.translateYProperty(), 6)),
+                new KeyFrame(Duration.millis(1000), new KeyValue(line.opacityProperty(), 1), new KeyValue(line.translateYProperty(), 0)));
+        lineAnim.play();
     }
 
     private void fadeOutBoot(Node overlay, StackPane sceneRoot) {
@@ -404,11 +452,13 @@ public class LauncherUI extends Application {
             newPage.setOpacity(0);
             pageContainer.getChildren().add(newPage);
 
-            FadeTransition fadeOut = new FadeTransition(Duration.millis(150), oldPage);
+            FadeTransition fadeOut = new FadeTransition(Duration.millis(180), oldPage);
+            fadeOut.setInterpolator(Interpolator.EASE_IN);
             fadeOut.setFromValue(1.0);
             fadeOut.setToValue(0.0);
 
-            FadeTransition fadeIn = new FadeTransition(Duration.millis(150), newPage);
+            FadeTransition fadeIn = new FadeTransition(Duration.millis(220), newPage);
+            fadeIn.setInterpolator(Interpolator.EASE_OUT);
             fadeIn.setFromValue(0.0);
             fadeIn.setToValue(1.0);
 
@@ -924,11 +974,14 @@ public class LauncherUI extends Application {
         grid.add(new Label("Loader"), 0, 2);
         grid.add(loader, 1, 2);
 
+        for (var node : grid.getChildren()) {
+            if (node instanceof Label l) l.getStyleClass().add("field-label");
+        }
+
         DialogPane pane = dialog.getDialogPane();
         pane.setContent(grid);
         pane.getButtonTypes().addAll(ButtonType.CANCEL, ButtonType.OK);
         pane.getStylesheets().add(getClass().getResource("/raven.css").toExternalForm());
-
         dialog.setResultConverter(bt -> bt == ButtonType.OK ? ButtonType.OK : null);
         if (dialog.showAndWait().orElse(null) != ButtonType.OK) return;
         if (name.getText() == null || name.getText().isBlank()) {
