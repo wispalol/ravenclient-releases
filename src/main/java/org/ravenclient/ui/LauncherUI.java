@@ -9,6 +9,8 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -552,15 +554,64 @@ public class LauncherUI extends Application {
 
         right.getChildren().addAll(profilesCard, instanceCard);
 
-        // Assemble
+        // Player display (skin + name) in the center
+        Node playerDisplay = buildPlayerDisplay();
+
+        // Main layout with hero, player display, and right column
         HBox main = new HBox(20);
         main.setPadding(new Insets(24, 28, 24, 28));
-        main.getChildren().addAll(hero, right);
+        main.getChildren().addAll(hero, playerDisplay, right);
+        HBox.setHgrow(hero, Priority.ALWAYS);
+        HBox.setHgrow(right, Priority.NEVER);
 
-        VBox root = new VBox(0, topBar, main);
+        // News section at the bottom
+        Node newsSection = buildNewsSection();
+
+        VBox root = new VBox(0, topBar, main, newsSection);
         root.getStyleClass().add("home-container");
         homeRoot = root;
         return root;
+    }
+
+    private Node buildNewsSection() {
+        Label title = new Label("Latest News");
+        title.getStyleClass().add("section-label");
+
+        VBox newsItems = new VBox(12);
+        newsItems.setPadding(new Insets(16, 28, 16, 28));
+
+        // Sample news items - in a real implementation these would come from an API
+        newsItems.getChildren().addAll(
+            newsCard("RavenClient 1.0.12 Update", "New animated UI with enhanced visuals, smooth page transitions, and a central player skin display. Check it out!"),
+            newsCard("Minecraft 1.21.11 Release", "The latest Minecraft update is now supported. Download the new version from the Versions tab.")
+        );
+
+        HBox container = new HBox();
+        container.setPadding(new Insets(0, 28, 16, 28));
+        container.getChildren().add(newsItems);
+        HBox.setHgrow(newsItems, Priority.ALWAYS);
+
+        return new VBox(0, title, container);
+    }
+
+    private Node newsCard(String title, String desc) {
+        VBox card = new VBox(8);
+        card.getStyleClass().add("news-card");
+
+        HBox header = new HBox(10);
+        header.setAlignment(Pos.CENTER_LEFT);
+        Label time = new Label("\u23F0");
+        time.getStyleClass().add("news-time");
+        Label newsTitle = new Label(title);
+        newsTitle.getStyleClass().add("news-title");
+        header.getChildren().addAll(time, newsTitle);
+
+        Label newsDesc = new Label(desc);
+        newsDesc.setWrapText(true);
+        newsDesc.getStyleClass().add("news-desc");
+
+        card.getChildren().addAll(header, newsDesc);
+        return card;
     }
 
     private static record CardInfo(String title, String desc) { }
@@ -1077,6 +1128,49 @@ public class LauncherUI extends Application {
     private static String iconColor(String s) {
         int h = s == null ? 7 : Math.abs(s.hashCode() % 360);
         return "hsb(" + h + ", 65%, 55%)";
+    }
+
+    private Node buildPlayerDisplay() {
+        VBox container = new VBox(14);
+        container.setAlignment(Pos.CENTER);
+        container.setPrefWidth(180);
+
+        StackPane avatarBox = new StackPane();
+        avatarBox.setMinSize(80, 80);
+        avatarBox.setPrefSize(80, 80);
+        avatarBox.setMaxSize(80, 80);
+        avatarBox.getStyleClass().add("player-avatar-box");
+
+        if (account != null && account.uuid() != null && !account.uuid().isBlank()) {
+            ImageView skin = new ImageView();
+            skin.setFitWidth(80);
+            skin.setFitHeight(80);
+            skin.setPreserveRatio(true);
+            String uuid = account.uuid().replace("-", "");
+            String avatarUrl = "https://crafatar.com/avatars/" + uuid + "?default=MHF_Alex";
+            pool.execute(() -> {
+                try {
+                    Image img = new Image(avatarUrl, 80, 80, true, true, true);
+                    Platform.runLater(() -> skin.setImage(img));
+                } catch (Exception ignored) {
+                    // Fall back to the initial label
+                }
+            });
+            avatarBox.getChildren().add(skin);
+        } else {
+            Label placeholder = new Label(account != null ? initial(accountLabel.getText()) : "\u263A");
+            placeholder.getStyleClass().add("player-avatar-placeholder");
+            avatarBox.getChildren().add(placeholder);
+        }
+
+        Label playerName = new Label(account != null ? accountLabel.getText() : "Not signed in");
+        playerName.getStyleClass().add("player-name");
+
+        Label playerStatus = new Label(account != null ? "Online" : "Offline");
+        playerStatus.getStyleClass().add(account != null ? "player-online" : "player-offline");
+
+        container.getChildren().addAll(avatarBox, playerName, playerStatus);
+        return container;
     }
 
     private void deleteProfile(String profileId, String loaderType) {
