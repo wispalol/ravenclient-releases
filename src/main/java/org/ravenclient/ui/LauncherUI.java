@@ -21,6 +21,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import javafx.stage.FileChooser;
 import org.ravenclient.auth.Account;
 import org.ravenclient.auth.AuthException;
 import org.ravenclient.auth.DeviceCodeSession;
@@ -1055,9 +1056,12 @@ public class LauncherUI extends Application {
         Button openFolderBtn = new Button("Open mods folder");
         openFolderBtn.getStyleClass().add("secondary-button");
         openFolderBtn.setOnAction(e -> openFolder(modsDir));
+        Button setJdkBtn = new Button("Set JDK");
+        setJdkBtn.getStyleClass().add("secondary-button");
+        setJdkBtn.setOnAction(e -> setProfileJdk(p));
         Region actionSpacer = new Region();
         HBox.setHgrow(actionSpacer, Priority.ALWAYS);
-        actions.getChildren().addAll(modsCountLbl, actionSpacer, addModsBtn, openFolderBtn);
+        actions.getChildren().addAll(modsCountLbl, actionSpacer, addModsBtn, openFolderBtn, setJdkBtn);
 
         card.getChildren().add(head);
         card.getChildren().add(actions);
@@ -1185,6 +1189,35 @@ public class LauncherUI extends Application {
             setStatus("Could not delete " + profileId + ": " + ex.getMessage());
         }
         refreshSidebarVersions();
+    }
+
+    private void setProfileJdk(Profile p) {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Select JDK java.exe for " + p.name());
+        chooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Java executable (java.exe)", "java.exe"));
+        if (p.javaPath() != null && !p.javaPath().isBlank()) {
+            chooser.setInitialDirectory(Path.of(p.javaPath()).getParent().toFile());
+        }
+        java.io.File picked = chooser.showOpenDialog(null);
+        if (picked == null) return;
+        try {
+            List<ProfileStore.Profile> profiles = ProfileStore.load(config.launcherDir);
+            String targetPath = picked.getAbsolutePath();
+            List<ProfileStore.Profile> updated = new ArrayList<>();
+            for (ProfileStore.Profile prof : profiles) {
+                if (prof.id().equals(p.id())) {
+                    updated.add(new ProfileStore.Profile(prof.id(), prof.name(), prof.version(), prof.loader(), prof.createdAt(), targetPath));
+                } else {
+                    updated.add(prof);
+                }
+            }
+            ProfileStore.save(config.launcherDir, updated);
+            setStatus("JDK set for " + p.name() + ": " + targetPath);
+            refreshProfilesPage();
+        } catch (Exception ex) {
+            setStatus("Could not set JDK: " + ex.getMessage());
+        }
     }
 
     private void installLoader(ComboBox<String> versionCombo, ComboBox<String> loaderCombo) {

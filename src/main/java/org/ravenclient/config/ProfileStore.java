@@ -23,7 +23,8 @@ public final class ProfileStore {
             String name,
             String version,
             String loader,
-            String createdAt
+            String createdAt,
+            String javaPath
     ) {
     }
 
@@ -71,7 +72,7 @@ public final class ProfileStore {
         }
         id = candidate;
         Profile p = new Profile(id, name.isBlank() ? base : name, version,
-                loader == null ? "Vanilla" : loader, java.time.Instant.now().toString());
+                loader == null ? "Vanilla" : loader, java.time.Instant.now().toString(), null);
         profiles.add(p);
         save(launcherDir, profiles);
         return p;

@@ -41,16 +41,23 @@ public final class JavaRuntime {
      * Uses the local JVM when it satisfies the requirement, otherwise downloads
      * the matching Mojang-bundled runtime into {@code gameDir/runtime}.
      * Falls back to the launcher's own bundled JRE when running from a packaged app.
+     * If {@code customJava} is set and points to a valid executable, it is used
+     * regardless of the declared requirement.
      */
-    public static Path resolve(Path gameDir, JsonNode javaVersion, GameLauncher.Listener listener) throws IOException {
+    public static Path resolve(Path gameDir, JsonNode javaVersion, Path customJava, GameLauncher.Listener listener) throws IOException {
         int required = javaVersion != null ? javaVersion.path("majorVersion").asInt(0) : 0;
         String component = javaVersion != null ? javaVersion.path("component").asText("") : "";
 
-        // Versions without a declared runtime run on the legacy Java 8 runtime,
-        // mirroring the official launcher (modern Java is incompatible with them).
         if (component.isEmpty()) {
             component = "jre-legacy";
             required = 8;
+        }
+
+        if (customJava != null && Files.isRegularFile(customJava)) {
+            if (listener != null) {
+                listener.log("Using profile JDK: " + customJava);
+            }
+            return customJava;
         }
 
         if (required <= localMajor() && !"jre-legacy".equals(component)) {
@@ -66,7 +73,6 @@ public final class JavaRuntime {
             }
         }
 
-        // Fall back to the launcher's bundled JRE (packaged with jpackage) if it satisfies requirements
         Path bundled = bundledRuntime();
         if (bundled != null && Files.isRegularFile(bundled)) {
             if (localMajor() >= required) {

@@ -15,6 +15,8 @@ import org.ravenclient.meta.VersionMeta;
 import org.ravenclient.updater.AppUpdater;
 import org.ravenclient.util.Http;
 import org.ravenclient.util.Json;
+import org.ravenclient.config.ProfileStore;
+import org.ravenclient.util.Json;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -87,7 +89,6 @@ public final class GameLauncher {
         Path metaFile;
         Path local = versionsRoot.resolve(selected).resolve(selected + ".json");
         if (Files.exists(local)) {
-            // Pre-staged manifest (e.g. a Fabric profile) - use it verbatim, no manifest lookup.
             id = selected;
             metaFile = local;
         } else {
@@ -192,7 +193,7 @@ public final class GameLauncher {
         String assetIndexId = meta.assetIndex() != null ? meta.assetIndex().id() : null;
         if (assetIndexId != null) downloadAssets(meta.assetIndex(), assetsRoot);
 
-        Path javaExe = JavaRuntime.resolve(config.gameDir, meta.javaVersion(), listener);
+        Path javaExe = JavaRuntime.resolve(config.gameDir, meta.javaVersion(), profileJavaPath(selected), listener);
 
         // Create version-specific mods directory for mod loaders
         Path modsDir = versionDir.resolve("mods");
@@ -213,6 +214,15 @@ public final class GameLauncher {
         listener.log("Installed Mods: " + Files.list(modsDir).count());
         
         return new LaunchData(meta, id, classpath, nativesDir, assetsRoot, config.gameDir, assetIndexId, javaExe, versionDir, modsDir);
+    }
+
+    private Path profileJavaPath(String selected) {
+        ProfileStore.Profile p = ProfileStore.find(config.launcherDir, selected);
+        if (p != null && p.javaPath() != null && !p.javaPath().isBlank()) {
+            Path candidate = Path.of(p.javaPath());
+            if (Files.isRegularFile(candidate)) return candidate;
+        }
+        return null;
     }
 
     /**
