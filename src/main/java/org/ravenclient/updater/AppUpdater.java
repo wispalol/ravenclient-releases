@@ -27,13 +27,15 @@ import java.util.zip.ZipInputStream;
 public final class AppUpdater {
 
     /**
-     * URL of the update manifest, served from the GitHub repo that hosts this
-     * project (update.json lives in the repo root and is kept in sync by
-     * scripts/release.ps1 on every release). Can be overridden at launch with
+     * URL of the update manifest. The source repo (wispalol/ravenclient) is
+     * private, so the update artifacts live in a separate public repo
+     * (wispalol/ravenclient-releases) that installed clients can reach without
+     * any credentials. update.json there is kept in sync by scripts/release.ps1
+     * on every release. Can be overridden at launch with
      * {@code -Draven.updateUrl=https://.../update.json}
      */
     public static final String DEFAULT_MANIFEST_URL =
-            "https://raw.githubusercontent.com/wispalol/ravenclient/main/update.json";
+            "https://raw.githubusercontent.com/wispalol/ravenclient-releases/main/update.json";
 
     private AppUpdater() {
     }
