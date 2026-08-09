@@ -6,7 +6,7 @@
 
     <groupId>org.ravenclient</groupId>
     <artifactId>ravenclient</artifactId>
-    <version>1.0.23</version>
+    <version>1.0.24</version>
     <name>RavenClient</name>
     <description>An open-source Minecraft launcher with Microsoft account support.</description>
 
