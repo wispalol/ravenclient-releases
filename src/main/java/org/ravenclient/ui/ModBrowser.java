@@ -15,6 +15,11 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Label;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 import org.ravenclient.config.LauncherConfig;
@@ -392,11 +397,11 @@ public class ModBrowser {
                     Image img = new Image(hit.icon_url(), size, size, true, true, true);
                     Platform.runLater(() -> icon.setImage(img));
                 } catch (Exception ignored) {
-                    loadGeneratedIcon(hit, icon, size);
+                    icon.setImage(generateFallbackIcon(hit.title(), size));
                 }
             });
         } else {
-            loadGeneratedIcon(hit, icon, size);
+            icon.setImage(generateFallbackIcon(hit.title(), size));
         }
     }
 
@@ -404,18 +409,26 @@ public class ModBrowser {
         loadIcon(hit, icon, 56);
     }
 
-    private void loadGeneratedIcon(ModSearch.Hit hit, ImageView icon, int size) {
-        String name = hit.title() != null && !hit.title().isBlank() ? hit.title() : "Mod";
-        String encoded = name.replace(" ", "+");
-        String url = "https://ui-avatars.com/api/?name=" + encoded + "&background=7c5cff&color=fff&size=" + size + "&bold=true&format=png";
-        pool.execute(() -> {
-            try {
-                Image img = new Image(url, size, size, true, true);
-                Platform.runLater(() -> icon.setImage(img));
-            } catch (Exception ignored) {
-                // placeholder stays visible
-            }
-        });
+    private Image generateFallbackIcon(String title, int size) {
+        int w = Math.max(size, 64);
+        int h = Math.max(size, 64);
+        Canvas canvas = new Canvas(w, h);
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        String initial = (title == null || title.isBlank()) ? "?" : title.trim().substring(0, 1).toUpperCase();
+        int h1 = title == null ? 7 : Math.abs(title.hashCode() % 360);
+        javafx.scene.paint.Color bg = javafx.scene.paint.Color.hsb(h1 / 360.0, 0.55, 0.45);
+        gc.setFill(bg);
+        gc.fillRoundRect(0, 0, w, h, 16, 16);
+        gc.setFill(Color.WHITE);
+        gc.setFont(Font.font("Arial", FontWeight.BOLD, w / 3));
+        javafx.scene.text.Text text = new javafx.scene.text.Text(initial);
+        text.setFont(gc.getFont());
+        double tw = text.getLayoutBounds().getWidth();
+        double th = text.getLayoutBounds().getHeight();
+        gc.fillText(initial, (w - tw) / 2, (h + th) / 2 - 4);
+        javafx.scene.image.WritableImage img = new javafx.scene.image.WritableImage(w, h);
+        canvas.snapshot(null, img);
+        return img;
     }
 
     private HBox buildActions(ModSearch.Hit hit) {

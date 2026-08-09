@@ -1167,7 +1167,7 @@ public class LauncherUI extends Application {
             skin.setFitHeight(120);
             skin.setPreserveRatio(true);
             String uuid = account.uuid().replace("-", "");
-            String avatarUrl = "https://minecraft-skins-api.com/head/" + uuid;
+            String avatarUrl = "https://visage.surgeplay.com/head/" + uuid;
             pool.execute(() -> {
                 try {
                     Image img = new Image(avatarUrl, 120, 120, true, true);
