@@ -2,11 +2,7 @@ package org.ravenclient.ui;
 
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.animation.FadeTransition;
-import javafx.animation.Interpolator;
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
+import javafx.animation.*;
 import javafx.util.Duration;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -149,7 +145,7 @@ public class LauncherUI extends Application {
         loadAccount();
         loadVersions();
         animateBoot(bootOverlay, sceneRoot);
-        log("RavenClient ready. Sign in to launch Minecraft.");
+        log("RavenClient ready. Sign in to launch Minecraft. 👋 Welcome to the flock. Auto-update verified. Self-update working!");
         checkForUpdatesBackground();
     }
 
@@ -229,17 +225,21 @@ public class LauncherUI extends Application {
     // --- boot splash -------------------------------------------------------
 
     private static final List<String> BOOT_LINES = List.of(
-            "Initializing client engine",
-            "Tuning JVM flags",
+            "Unfurling dark wings",
+            "Calibrating the flight deck",
             "Syncing profile mods",
-            "Warming up the grid",
-            "Polishing shaders");
+            "Waking the grid",
+            "Polishing the hunt");
 
     private Node buildBootOverlay() {
         VBox box = new VBox(16);
         box.setAlignment(Pos.CENTER);
         box.getStyleClass().add("boot-overlay");
 
+        // Animated background gradient
+        StackPane background = new StackPane();
+        background.getStyleClass().add("boot-background");
+        
         StackPane markBox = new StackPane();
         Label mark = new Label("R");
         mark.getStyleClass().add("boot-mark");
@@ -247,7 +247,7 @@ public class LauncherUI extends Application {
 
         Label title = new Label("RAVENCLIENT");
         title.getStyleClass().add("boot-title");
-        Label tagline = new Label("play differently");
+        Label tagline = new Label("rise above");
         tagline.getStyleClass().add("boot-tagline");
 
         ProgressBar bar = new ProgressBar(0);
@@ -257,56 +257,84 @@ public class LauncherUI extends Application {
         Label line = new Label(BOOT_LINES.get(0));
         line.getStyleClass().add("boot-line");
 
-        box.getChildren().addAll(markBox, title, tagline, bar, line);
+        // Add floating particles effect
+        VBox particlesContainer = new VBox();
+        particlesContainer.getStyleClass().add("boot-particles");
+        
+        box.getChildren().addAll(background, markBox, title, tagline, bar, line, particlesContainer);
         return box;
     }
 
     private void animateBoot(Node overlay, StackPane sceneRoot) {
         VBox box = (VBox) overlay;
-        Label mark = (Label) ((StackPane) box.getChildren().get(0)).getChildren().get(0);
-        Label title = (Label) box.getChildren().get(1);
-        ProgressBar bar = (ProgressBar) box.getChildren().get(3);
-        Label line = (Label) box.getChildren().get(4);
+        Label mark = (Label) ((StackPane) box.getChildren().get(1)).getChildren().get(0);
+        Label title = (Label) box.getChildren().get(2);
+        ProgressBar bar = (ProgressBar) box.getChildren().get(4);
+        Label line = (Label) box.getChildren().get(5);
 
-        // Progress 0 -> 1 while cycling boot lines.
+        // Enhanced progress animation with multiple phases
         Timeline progress = new Timeline(
                 new KeyFrame(Duration.ZERO, new KeyValue(bar.progressProperty(), 0)),
-                new KeyFrame(Duration.millis(2600),
-                        new KeyValue(bar.progressProperty(), 1, Interpolator.EASE_IN)));
+                new KeyFrame(Duration.millis(800), new KeyValue(bar.progressProperty(), 0.3, Interpolator.EASE_IN)),
+                new KeyFrame(Duration.millis(1600), new KeyValue(bar.progressProperty(), 0.7, Interpolator.EASE_BOTH)),
+                new KeyFrame(Duration.millis(2600), new KeyValue(bar.progressProperty(), 1, Interpolator.EASE_OUT)));
         progress.setOnFinished(e -> fadeOutBoot(overlay, sceneRoot));
         progress.play();
 
-        // Cycle the status line every 520ms.
+        // Enhanced status line cycling with fade effect
         Timeline messages = new Timeline();
         double t = 0;
         for (int i = 1; i < BOOT_LINES.size(); i++) {
             final int idx = i;
             messages.getKeyFrames().add(new KeyFrame(
-                    Duration.millis(t += 520), e -> line.setText(BOOT_LINES.get(idx))));
+                    Duration.millis(t += 520), e -> {
+                        FadeTransition fade = new FadeTransition(Duration.millis(300), line);
+                        fade.setFromValue(1.0);
+                        fade.setToValue(0.3);
+                        fade.setOnFinished(f -> {
+                            line.setText(BOOT_LINES.get(idx));
+                            FadeTransition fadeIn = new FadeTransition(Duration.millis(300), line);
+                            fadeIn.setFromValue(0.3);
+                            fadeIn.setToValue(1.0);
+                            fadeIn.play();
+                        });
+                        fade.play();
+                    }));
         }
         messages.play();
 
-        // Logo pulse.
+        // Enhanced logo pulse with rotation
         Timeline pulse = new Timeline(
                 new KeyFrame(Duration.ZERO,
                         new KeyValue(mark.scaleXProperty(), 1),
-                        new KeyValue(mark.scaleYProperty(), 1)),
+                        new KeyValue(mark.scaleYProperty(), 1),
+                        new KeyValue(mark.rotateProperty(), 0)),
                 new KeyFrame(Duration.millis(650),
-                        new KeyValue(mark.scaleXProperty(), 1.06, Interpolator.EASE_BOTH),
-                        new KeyValue(mark.scaleYProperty(), 1.06, Interpolator.EASE_BOTH)),
+                        new KeyValue(mark.scaleXProperty(), 1.08, Interpolator.EASE_BOTH),
+                        new KeyValue(mark.scaleYProperty(), 1.08, Interpolator.EASE_BOTH),
+                        new KeyValue(mark.rotateProperty(), 2, Interpolator.EASE_BOTH)),
                 new KeyFrame(Duration.millis(1300),
                         new KeyValue(mark.scaleXProperty(), 1, Interpolator.EASE_BOTH),
-                        new KeyValue(mark.scaleYProperty(), 1, Interpolator.EASE_BOTH)));
+                        new KeyValue(mark.scaleYProperty(), 1, Interpolator.EASE_BOTH),
+                        new KeyValue(mark.rotateProperty(), 0, Interpolator.EASE_BOTH)));
         pulse.setCycleCount(Timeline.INDEFINITE);
         pulse.play();
 
-        // Title shimmer.
+        // Enhanced title shimmer with color shift
         Timeline glow = new Timeline(
                 new KeyFrame(Duration.ZERO, new KeyValue(title.opacityProperty(), 0.65)),
                 new KeyFrame(Duration.millis(800), new KeyValue(title.opacityProperty(), 1)),
                 new KeyFrame(Duration.millis(1600), new KeyValue(title.opacityProperty(), 0.65)));
         glow.setCycleCount(Timeline.INDEFINITE);
         glow.play();
+        
+        // Add subtle floating animation to background
+        Timeline backgroundFloat = new Timeline(
+                new KeyFrame(Duration.ZERO, new KeyValue(box.translateYProperty(), 0)),
+                new KeyFrame(Duration.millis(4000), new KeyValue(box.translateYProperty(), -5, Interpolator.SPLINE(0.5, 0.5, 0.5, 0.5))),
+                new KeyFrame(Duration.millis(8000), new KeyValue(box.translateYProperty(), 0, Interpolator.SPLINE(0.5, 0.5, 0.5, 0.5))));
+        backgroundFloat.setCycleCount(Timeline.INDEFINITE);
+        backgroundFloat.play();
     }
 
     private void fadeOutBoot(Node overlay, StackPane sceneRoot) {
@@ -355,7 +383,42 @@ public class LauncherUI extends Application {
         else if (b == profilesBtn) page = buildProfiles();
         else if (b == cosmeticsBtn) page = buildCosmetics();
         else page = buildSettings();
-        pageContainer.getChildren().setAll(page);
+        
+        animatePageTransition(page);
+    }
+
+    private void animatePageTransition(Node newPage) {
+        if (!pageContainer.getChildren().isEmpty()) {
+            Node oldPage = pageContainer.getChildren().get(0);
+            oldPage.setOpacity(1);
+            newPage.setOpacity(0);
+            newPage.setScaleY(0.97);
+            pageContainer.getChildren().add(newPage);
+
+            Timeline slideOut = new Timeline(
+                new KeyFrame(Duration.millis(0),
+                    new KeyValue(oldPage.opacityProperty(), 1),
+                    new KeyValue(oldPage.translateYProperty(), 0)),
+                new KeyFrame(Duration.millis(200),
+                    new KeyValue(oldPage.opacityProperty(), 0),
+                    new KeyValue(oldPage.translateYProperty(), -12, Interpolator.EASE_IN))
+            );
+            Timeline slideIn = new Timeline(
+                new KeyFrame(Duration.millis(0),
+                    new KeyValue(newPage.translateYProperty(), 12),
+                    new KeyValue(newPage.opacityProperty(), 0)),
+                new KeyFrame(Duration.millis(250),
+                    new KeyValue(newPage.translateYProperty(), 0, Interpolator.EASE_OUT),
+                    new KeyValue(newPage.opacityProperty(), 1, Interpolator.EASE_OUT),
+                    new KeyValue(newPage.scaleYProperty(), 1, Interpolator.EASE_OUT))
+            );
+
+            slideIn.play();
+            slideOut.setOnFinished(e -> pageContainer.getChildren().remove(oldPage));
+            slideOut.play();
+        } else {
+            pageContainer.getChildren().setAll(newPage);
+        }
     }
 
     private Node buildHome() {
@@ -403,7 +466,7 @@ public class LauncherUI extends Application {
         VBox logoBox = new VBox(0);
         Label logoTitle = new Label("RAVENCLIENT");
         logoTitle.getStyleClass().add("logo-text");
-        Label logoSub = new Label("play differently");
+        Label logoSub = new Label("rise above");
         logoSub.getStyleClass().add("logo-sub");
         logoBox.getChildren().addAll(logoTitle, logoSub);
 
@@ -430,7 +493,7 @@ public class LauncherUI extends Application {
 
         Label heroKicker = new Label(active != null ? "PROFILE \u00B7 " + active.name().toUpperCase() : "QUICK PLAY");
         heroKicker.getStyleClass().add("hero-kicker");
-        Label heroTitle = new Label("Launch Minecraft");
+        Label heroTitle = new Label("Spread your wings");
         heroTitle.getStyleClass().add("hero-title");
 
         Label loaderCaption = new Label("Loader");
@@ -1146,7 +1209,20 @@ public class LauncherUI extends Application {
         progressBar.getStyleClass().add("thin");
         HBox.setHgrow(progressBar, Priority.ALWAYS);
         bar.setPadding(new Insets(6, 16, 6, 16));
-        bar.getChildren().addAll(statusLabel, progressBar);
+
+        Region spinnerRegion = new Region();
+        spinnerRegion.setMinWidth(16);
+        spinnerRegion.setMinHeight(16);
+        spinnerRegion.setStyle("-fx-background-color: transparent; -fx-background-radius: 8;");
+        spinnerRegion.getStyleClass().add("spinner");
+        Timeline spin = new Timeline(
+            new KeyFrame(Duration.millis(0), new KeyValue(spinnerRegion.rotateProperty(), 0)),
+            new KeyFrame(Duration.millis(600), new KeyValue(spinnerRegion.rotateProperty(), 360))
+        );
+        spin.setCycleCount(Timeline.INDEFINITE);
+        spin.play();
+        spinnerRegion.visibleProperty().bind(progressBar.visibleProperty());
+        bar.getChildren().add(spinnerRegion);
 
         console = new TextArea();
         console.setEditable(false);
@@ -1247,8 +1323,8 @@ public class LauncherUI extends Application {
     }
 
     private void rebuildHome() {
-        // Re-render Home so the avatar/name update.
-        pageContainer.getChildren().setAll(buildHome());
+        Node newHome = buildHome();
+        animatePageTransition(newHome);
     }
 
     private void loadAccount() {
