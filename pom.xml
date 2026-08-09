@@ -6,7 +6,7 @@
 
     <groupId>org.ravenclient</groupId>
     <artifactId>ravenclient</artifactId>
-    <version>1.0.8</version>
+    <version>1.0.9</version>
     <name>RavenClient</name>
     <description>An open-source Minecraft launcher with Microsoft account support.</description>
 
@@ -14,9 +14,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>21</maven.compiler.release>
         <javafx.version>21.0.4</javafx.version>
-        <!-- Build a setup.exe? Needs Inno Setup (iscc) installed AND on PATH.
-             Enable via: mvn package -Pinstaller -->
-        <generateInstaller>false</generateInstaller>
+        <jpackage.input.dir>${project.build.directory}/jpackage-input</jpackage.input.dir>
+        <jpackage.output.dir>${project.build.directory}/RavenClient</jpackage.output.dir>
     </properties>
 
     <dependencies>
@@ -40,7 +39,6 @@
                 <version>3.13.0</version>
             </plugin>
 
-            <!-- Run in development:  mvn javafx:run -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
@@ -50,10 +48,6 @@
                 </configuration>
             </plugin>
 
-            <!-- Build a native Windows EXE with a bundled JRE:  mvn package
-                 Output lands in target/RavenClient/ with RavenClient.exe.
-                 Enable generateInstaller=true if Inno Setup (iscc) is installed
-                 to also produce a setup .exe. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -79,27 +73,50 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/libs</outputDirectory>
+                            <includeScope>runtime</includeScope>
+                            <excludeTransitive>false</excludeTransitive>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>3.1.0</version>
                 <executions>
                     <execution>
-                        <id>copy-main-jar</id>
+                        <id>prepare-jpackage-input</id>
                         <phase>package</phase>
                         <goals>
                             <goal>run</goal>
                         </goals>
                         <configuration>
                             <target>
-                                <mkdir dir="${project.build.directory}/RavenClient"/>
+                                <mkdir dir="${jpackage.input.dir}"/>
+                                <mkdir dir="${jpackage.input.dir}/libs"/>
                                 <copy file="${project.build.directory}/ravenclient-${project.version}-runnable.jar"
-                                      tofile="${project.build.directory}/RavenClient/app.jar"/>
+                                      tofile="${jpackage.input.dir}/app.jar"/>
+                                <copy todir="${jpackage.input.dir}/libs">
+                                    <fileset dir="${project.build.directory}/libs"/>
+                                </copy>
+                                <copy file="${project.basedir}/src/main/resources/raven.ico"
+                                      tofile="${jpackage.input.dir}/raven.ico"/>
                             </target>
                         </configuration>
                     </execution>
 
-                    <!-- Build the small update zip (app.jar + libs) that gets pushed to
-                         users' machines via the self-updater. The bundled JRE and the
-                         .exe are deliberately excluded - they stay put across updates. -->
                     <execution>
                         <id>build-update-zip</id>
                         <phase>package</phase>
@@ -109,7 +126,7 @@
                         <configuration>
                             <target>
                                 <zip destfile="${project.build.directory}/RavenClient-update-${project.version}.zip">
-                                    <zipfileset dir="${project.build.directory}/RavenClient">
+                                    <zipfileset dir="${jpackage.input.dir}">
                                         <include name="app.jar"/>
                                         <include name="libs/*"/>
                                     </zipfileset>
@@ -120,42 +137,39 @@
                 </executions>
             </plugin>
 
-            <!-- Build a native Windows EXE with a bundled JRE:  mvn package
-                 Output lands in target/RavenClient/ with RavenClient.exe.
-                 Enable generateInstaller=true if Inno Setup (iscc) is installed
-                 to also produce a setup .exe. -->
             <plugin>
-                <groupId>io.github.fvarrui</groupId>
-                <artifactId>javapackager</artifactId>
-                <version>1.7.6</version>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
                 <executions>
                     <execution>
+                        <id>jpackage-image</id>
                         <phase>package</phase>
                         <goals>
-                            <goal>package</goal>
+                            <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <mainClass>org.ravenclient.RavenClient</mainClass>
-                            <name>RavenClient</name>
-                            <displayName>RavenClient</displayName>
-                            <version>${project.version}</version>
-                            <organizationName>RavenClient</organizationName>
-                            <bundleJre>true</bundleJre>
-                            <customizedJre>false</customizedJre>
-                            <iconFile>${project.basedir}/src/main/resources/raven.ico</iconFile>
-                            <winConfig>
-                                <icoFile>${project.basedir}/src/main/resources/raven.ico</icoFile>
-                                <createDesktopIconTask>true</createDesktopIconTask>
-                                <disableRunAfterInstall>false</disableRunAfterInstall>
-                                <setupMode>installForCurrentUser</setupMode>
-                                <generateSetup>${generateInstaller}</generateSetup>
-                                <generateMsi>false</generateMsi>
-                            </winConfig>
-                            <generateInstaller>${generateInstaller}</generateInstaller>
-                            <createZipball>true</createZipball>
-                            <!-- Explicit classpath: javapackager sometimes bakes the launcher's
-                                 own .exe as the only class path entry. Force app.jar + libs. -->
-                            <classpath>app.jar;libs/*</classpath>
+                            <executable>jpackage</executable>
+                            <arguments>
+                                <argument>--type</argument>
+                                <argument>app-image</argument>
+                                <argument>--name</argument>
+                                <argument>RavenClient</argument>
+                                <argument>--app-version</argument>
+                                <argument>${project.version}</argument>
+                                <argument>--main-class</argument>
+                                <argument>org.ravenclient.RavenClient</argument>
+                                <argument>--main-jar</argument>
+                                <argument>app.jar</argument>
+                                <argument>--icon</argument>
+                                <argument>${jpackage.input.dir}/raven.ico</argument>
+                                <argument>--input</argument>
+                                <argument>${jpackage.input.dir}</argument>
+                                <argument>--dest</argument>
+                                <argument>${project.build.directory}</argument>
+                                <argument>--java-options</argument>
+                                <argument>-Dprism.order=sw</argument>
+                            </arguments>
                         </configuration>
                     </execution>
                 </executions>
@@ -164,8 +178,6 @@
     </build>
 
     <profiles>
-        <!-- mvn package -Pinstaller  ->  also produces RavenClientSetup.exe
-             (requires Inno Setup 6; iscc.exe must be on PATH). -->
         <profile>
             <id>installer</id>
             <properties>
