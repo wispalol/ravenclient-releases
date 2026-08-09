@@ -457,7 +457,7 @@ public class LauncherUI extends Application {
         HBox topBar = new HBox(14);
         topBar.getStyleClass().add("top-bar");
         topBar.setAlignment(Pos.CENTER_LEFT);
-        topBar.setPadding(new Insets(14, 22, 14, 22));
+        topBar.setPadding(new Insets(14, 24, 14, 24));
 
         Label logoMark = new Label("R");
         logoMark.getStyleClass().add("logo-mark");
