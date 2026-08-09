@@ -25,29 +25,36 @@ $Tag = "v$Version"
 $ZipName = "RavenClient-update-$Version.zip"
 $SetupName = "RavenClient_$Version.exe"
 
+# PowerShell 5.1 Set-Content -Encoding UTF8 writes a BOM, which breaks javac/JSON.
+function Write-NoBom([string]$Path, [string]$Text) {
+    [System.IO.File]::WriteAllText($Path, $Text, (New-Object System.Text.UTF8Encoding($false)))
+}
+
 if ($Version -notmatch '^\d+\.\d+\.\d+$') {
     throw "Version must look like '1.2.3', got '$Version'"
 }
 
 # --- bump version in pom.xml (first <version> tag = project version) and ClientVersion ---
 $pom = Get-Content -Raw pom.xml
-$pom = [regex]::Replace($pom, '<version>[\d.]+</version>', "<version>$Version</version>", 1)
-Set-Content -LiteralPath pom.xml -Value $pom -Encoding UTF8
+$first = [regex]::Match($pom, '<version>[\d.]+</version>')
+if (-not $first.Success) { throw 'Could not find the project <version> in pom.xml' }
+$pom = $pom.Substring(0, $first.Index) + "<version>$Version</version>" + $pom.Substring($first.Index + $first.Length)
+Write-NoBom (Join-Path $PSScriptRoot '..\pom.xml') $pom
 
 $cvPath = 'src\main\java\org\ravenclient\updater\ClientVersion.java'
 $cv = Get-Content -Raw $cvPath
 $cv = $cv -replace '(VERSION = ")[^"]+(")', "`${1}$Version`${2}"
-Set-Content -LiteralPath $cvPath -Value $cv -Encoding UTF8
+Write-NoBom (Join-Path $PSScriptRoot "..\$cvPath") $cv
 
-# --- build ---
-Write-Host "==> mvn package -DskipTests$($(if ($Installer) {' -Pinstaller'} else {''}))"
-$buildArgs = @('package', '-DskipTests', '-q')
+# --- build (clean: incremental builds can ship stale classes in the jar) ---
+Write-Host "==> mvn clean package -DskipTests$($(if ($Installer) {' -Pinstaller'} else {''}))"
+$buildArgs = @('clean', 'package', '-DskipTests', '-q')
 if ($Installer) { $buildArgs += '-Pinstaller' }
 mvn @buildArgs
 if ($LASTEXITCODE -ne 0) { throw "Maven build failed (exit $LASTEXITCODE)" }
 
 # --- checksum + manifest (points at the PUBLIC release repo) ---
-$target = Join-Path (Join-Path $PSScriptRoot '..\target')
+$target = Join-Path $PSScriptRoot '..\target'
 $zip = Join-Path $target $ZipName
 if (-not (Test-Path -LiteralPath $zip)) {
     throw "Expected update zip not found: $zip (run with -Installer and check the build)"
@@ -59,7 +66,7 @@ $manifest = [ordered]@{
     url     = "https://github.com/$ReleaseRepo/releases/download/$Tag/$ZipName"
     sha256  = $sha
 }
-(ConvertTo-Json $manifest -Depth 3) | Set-Content -LiteralPath update.json -Encoding UTF8
+Write-NoBom (Join-Path $PSScriptRoot '..\update.json') (ConvertTo-Json $manifest -Depth 3)
 Write-Host "==> update.json updated (sha256=$sha)"
 
 # --- push source + manifest to the private source repo ---
