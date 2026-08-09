@@ -103,9 +103,21 @@ public final class JavaRuntime {
      */
     private static Path bundledRuntime() {
         Path installDir = AppUpdater.installDir();
-        Path runtime = installDir.resolve("runtime").resolve("bin").resolve(
-                osId().equals("windows") ? "java.exe" : "java");
-        return Files.isRegularFile(runtime) ? runtime : null;
+        // jpackage layout: RavenClient.exe + jre/ / app/ / libs/ / runtime/
+        Path jreJava = installDir.resolve("jre").resolve(osId().equals("windows") ? "bin/java.exe" : "bin/java");
+        if (Files.isRegularFile(jreJava)) return jreJava;
+        // Alternative layout: runtime/ directory
+        Path runtimeJava = installDir.resolve("runtime").resolve(osId().equals("windows") ? "bin/java.exe" : "bin/java");
+        if (Files.isRegularFile(runtimeJava)) return runtimeJava;
+        // Parent directory (in case installDir is the app/ subdir)
+        Path parent = installDir.getParent();
+        if (parent != null) {
+            Path parentJre = parent.resolve("jre").resolve(osId().equals("windows") ? "bin/java.exe" : "bin/java");
+            if (Files.isRegularFile(parentJre)) return parentJre;
+            Path parentRuntime = parent.resolve("runtime").resolve(osId().equals("windows") ? "bin/java.exe" : "bin/java");
+            if (Files.isRegularFile(parentRuntime)) return parentRuntime;
+        }
+        return null;
     }
 
     private static void downloadFiles(JsonNode files, Path root, GameLauncher.Listener listener) throws IOException {
