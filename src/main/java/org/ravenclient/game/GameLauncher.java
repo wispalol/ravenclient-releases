@@ -12,6 +12,7 @@ import org.ravenclient.meta.Library;
 import org.ravenclient.meta.MinecraftMeta;
 import org.ravenclient.meta.VersionManifest;
 import org.ravenclient.meta.VersionMeta;
+import org.ravenclient.updater.AppUpdater;
 import org.ravenclient.util.Http;
 import org.ravenclient.util.Json;
 
@@ -19,7 +20,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;import java.nio.charset.StandardCharsets;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -404,20 +406,57 @@ public final class GameLauncher {
     private void addJvmArg(List<String> cmd, String raw, LaunchData data, Account account) {
         if (raw == null || raw.isBlank()) return;
         if (raw.equals("-cp") || raw.equals("${classpath}") || raw.startsWith("-Djava.library.path=")) return;
-        // --sun-misc-unsafe-memory-access and --enable-native-access require Java 23+; skip on older runtimes.
-        if (javaMajorRuntime() < 23 && (raw.startsWith("--sun-misc-unsafe-memory-access") || raw.startsWith("--enable-native-access"))) return;
+        // Fabric/modern version JSON can ship a removed --sun-misc-unsafe-memory-access
+        // flag that crashes Java 21. --enable-native-access=ALL-UNNAMED is valid on 21+.
+        if (javaMajorForGame(data) < 23 && raw.startsWith("--sun-misc-unsafe-memory-access")) {
+            return;
+        }
         cmd.add(substitute(raw, data, account));
     }
 
-    private static int javaMajorRuntime() {
+    /**
+     * Major version of the JVM that will actually run the game. Prefer the
+     * local runtime when that is the chosen exe; otherwise use the version
+     * manifest requirement (Mojang runtimes match that major).
+     */
+    private static int javaMajorForGame(LaunchData data) {
         try {
-            String v = System.getProperty("java.version", "21");
-            String[] parts = v.split("[.+\\-]");
-            int major = Integer.parseInt(parts[0]);
-            return major == 1 && parts.length > 1 ? Integer.parseInt(parts[1]) : major;
-        } catch (Exception e) {
-            return 21;
+            Path exe = data.javaExe();
+            if (exe != null) {
+                Path local = JavaRuntime.localJava();
+                if (Files.isRegularFile(local)
+                        && exe.toAbsolutePath().normalize().equals(local.toAbsolutePath().normalize())) {
+                    return JavaRuntime.localMajor();
+                }
+                Path installDir = AppUpdater.installDir();
+                if (installDir != null) {
+                    String os = System.getProperty("os.name", "").toLowerCase();
+                    boolean win = os.contains("win");
+                    String javaBin = win ? "bin/java.exe" : "bin/java";
+                    Path[] candidates = {
+                        installDir.resolve("jre").resolve(javaBin),
+                        installDir.resolve("runtime").resolve(javaBin)
+                    };
+                    Path parent = installDir.getParent();
+                    if (parent != null) {
+                        candidates = new Path[]{
+                            candidates[0], candidates[1],
+                            parent.resolve("jre").resolve(javaBin),
+                            parent.resolve("runtime").resolve(javaBin)
+                        };
+                    }
+                    for (Path candidate : candidates) {
+                        if (Files.isRegularFile(candidate)
+                                && exe.toAbsolutePath().normalize().equals(candidate.toAbsolutePath().normalize())) {
+                            return JavaRuntime.localMajor();
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+            // fall through to required major
         }
+        return requiredJavaMajor(data);
     }
 
     private String substitute(String input, LaunchData data, Account account) {
