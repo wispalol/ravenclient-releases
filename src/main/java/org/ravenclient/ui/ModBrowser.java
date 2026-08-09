@@ -263,6 +263,7 @@ public class ModBrowser {
         iconBox.setMinSize(56, 56);
         iconBox.setPrefSize(56, 56);
         iconBox.setMaxSize(56, 56);
+        iconBox.getStyleClass().add("mod-icon-box");
 
         Label placeholder = new Label(initial(hit.title()));
         placeholder.getStyleClass().add("mod-icon-placeholder");
@@ -340,6 +341,7 @@ public class ModBrowser {
         iconBox.setPrefSize(64, 64);
         iconBox.setMaxSize(64, 64);
         iconBox.setAlignment(Pos.CENTER);
+        iconBox.getStyleClass().add("mod-icon-box");
 
         Label placeholder = new Label(initial(hit.title()));
         placeholder.getStyleClass().add("mod-icon-placeholder");
@@ -359,7 +361,7 @@ public class ModBrowser {
         icon.setClip(rounded);
 
         iconBox.getChildren().addAll(placeholder, icon);
-        loadIcon(hit, icon);
+        loadIcon(hit, icon, 64);
 
         Label title = new Label(hit.title());
         title.getStyleClass().add("mod-title");
@@ -383,16 +385,20 @@ public class ModBrowser {
         return card;
     }
 
-    private void loadIcon(ModSearch.Hit hit, ImageView icon) {
+    private void loadIcon(ModSearch.Hit hit, ImageView icon, int size) {
         if (hit.icon_url() == null || hit.icon_url().isBlank()) return;
         pool.execute(() -> {
             try {
-                Image img = new Image(hit.icon_url(), 56, 56, true, true, true);
+                Image img = new Image(hit.icon_url(), size, size, true, true, true);
                 Platform.runLater(() -> icon.setImage(img));
             } catch (Exception ignored) {
                 // icon fails to load -> the colored placeholder stays visible
             }
         });
+    }
+
+    private void loadIcon(ModSearch.Hit hit, ImageView icon) {
+        loadIcon(hit, icon, 56);
     }
 
     private HBox buildActions(ModSearch.Hit hit) {

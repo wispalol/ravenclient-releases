@@ -797,6 +797,24 @@
     -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.15), 16, 0, 0, 4);
 }
 
+.mod-icon-box {
+    -fx-background-color: rgba(22, 20, 40, 0.6);
+    -fx-background-radius: 14;
+    -fx-border-color: rgba(255, 255, 255, 0.05);
+    -fx-border-radius: 14;
+    -fx-border-width: 1;
+    -fx-padding: 4;
+}
+
+.mod-icon-placeholder {
+    -fx-background-radius: 14;
+    -fx-font-size: 20px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #ffffff;
+    -fx-alignment: center;
+    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.3), 8, 0, 0, 0);
+}
+
 .mod-title {
     -fx-font-size: 15px;
     -fx-font-weight: 700;
