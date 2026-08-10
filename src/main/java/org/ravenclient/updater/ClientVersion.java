@@ -8,7 +8,7 @@ public final class ClientVersion {
      * {@code target/RavenClient-update-<version>.zip} + a matching update.json
      * to your server so clients can self-update.
      */
-    public static final String VERSION = "1.0.49";
+    public static final String VERSION = "1.0.50";
 
     private ClientVersion() {
     }
