@@ -1,6 +1,6 @@
 {
-    "version":  "1.0.36",
-    "notes":  "RavenClient 1.0.36 release - Bundled Lunar-style title screen per Minecraft version (1.21.1, 1.21.11); launcher installs the matching mod per profile",
-    "url":  "https://github.com/wispalol/ravenclient-releases/releases/download/v1.0.36/RavenClient-update-1.0.36.zip",
-    "sha256":  "DF8CD5B5B71FE1E0DED4504A43416CB113127286E5F9124A0091A6755500C879"
+    "version":  "1.0.37",
+    "notes":  "RavenClient 1.0.37 release.",
+    "url":  "https://github.com/wispalol/ravenclient-releases/releases/download/v1.0.37/RavenClient-update-1.0.37.zip",
+    "sha256":  "e1fa688e2c406d8d331b32e04efbc0225f7bf9a1c87983b33452120eeeb36ef3"
 }
