@@ -1,6 +1,6 @@
 {
-    "version":  "1.0.50",
-    "notes":  "RavenClient 1.0.50 release.",
-    "url":  "https://github.com/wispalol/ravenclient-releases/releases/download/v1.0.50/RavenClient-update-1.0.50.zip",
-    "sha256":  "971f3ad52694fa65de7e8181e6d586610b72fcd4f8bb691347fd59a062017e19"
+    "version":  "1.0.51",
+    "notes":  "RavenClient 1.0.51 release.",
+    "url":  "https://github.com/wispalol/ravenclient-releases/releases/download/v1.0.51/RavenClient-update-1.0.51.zip",
+    "sha256":  "0fecc03db3a9652e973df194e1769f4324d04a48a39c6c4660171aac76f7ae76"
 }
