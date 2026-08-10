@@ -38,3 +38,7 @@ build/
 
 # Stakpak session files
 .stakpak/session*
+
+# Build artifacts and extracted deps
+net/
+raven-mod-26.2/

@@ -13,6 +13,8 @@ import net.minecraft.client.renderer.PanoramaRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.metadata.ModMetadata;
 
 /**
  * Clean main menu over the real rotating Minecraft panorama: three glassy pills
@@ -25,25 +27,27 @@ public class RavenTitleScreen extends Screen {
     public static volatile boolean suppressVanilla = false;
 
     private final PanoramaRenderer panorama;
-    private final RavenButton[] buttons = new RavenButton[3];
-    private final int[] baseY = new int[3];
+    private final RavenButton[] buttons = new RavenButton[4];
+    private final int[] baseY = new int[4];
     private float age;
+    private String version;
 
     public RavenTitleScreen() {
         super(Component.literal("RavenClient"));
         this.panorama = new PanoramaRenderer(new CubeMap(
                 Identifier.fromNamespaceAndPath("minecraft", "textures/gui/title/background/panorama")));
+        this.version = resolveVersion();
     }
 
     @Override
     protected void init() {
         clearWidgets();
 
-        int w = 210;
-        int h = 26;
+        int w = 260;
+        int h = 40;
         int gap = 16;
-        int blockH = h * 3 + gap * 2;
         int cx = (width - w) / 2;
+        int blockH = h * 4 + gap * 3;
         int startY = height / 2 - blockH / 2;
 
         buttons[0] = new RavenButton(cx, startY, w, h, Component.literal("Singleplayer"),
@@ -52,6 +56,8 @@ public class RavenTitleScreen extends Screen {
                 btn -> Minecraft.getInstance().setScreen(new JoinMultiplayerScreen(this)));
         buttons[2] = new RavenButton(cx, startY + 2 * (h + gap), w, h, Component.literal("Settings"),
                 btn -> Minecraft.getInstance().setScreen(new OptionsScreen(this, Minecraft.getInstance().options)));
+        buttons[3] = new RavenButton(cx, startY + 3 * (h + gap), w, h, Component.literal("Quit Game"),
+                btn -> Minecraft.getInstance().close());
 
         for (int i = 0; i < buttons.length; i++) {
             baseY[i] = buttons[i].getY();
@@ -74,6 +80,7 @@ public class RavenTitleScreen extends Screen {
             buttons[i].setY(baseY[i] + (int) ((1.0F - e) * 26));
         }
 
+        drawTitle(guiGraphics, ease);
         drawAccount(guiGraphics, ease);
         drawFooter(guiGraphics, ease);
 
@@ -126,12 +133,35 @@ public class RavenTitleScreen extends Screen {
                 px + 32, py + panelH / 2 - 4, (textAlpha << 24) | 0x23262B);
     }
 
+    private void drawTitle(GuiGraphics guiGraphics, float ease) {
+        Minecraft mc = Minecraft.getInstance();
+        float e = enter(age, 0.0F, 0.7F);
+        int alpha = (int) (0xFF * e);
+        int cx = width / 2;
+        int cy = height / 2 - 120;
+
+        String title = "RavenClient";
+        int textWidth = mc.font.width(Component.literal(title));
+
+        guiGraphics.drawString(mc.font, Component.literal(title), cx - textWidth / 2 + 2, cy + 2, (alpha << 24) | 0x3A000000);
+        guiGraphics.drawString(mc.font, Component.literal(title), cx - textWidth / 2, cy, (alpha << 24) | 0xFFFFFFFF);
+    }
+
+    private String resolveVersion() {
+        try {
+            ModMetadata metadata = FabricLoader.getInstance().getModContainer("ravenclient").get().getMetadata();
+            return metadata.getVersion().getFriendlyString();
+        } catch (Exception e) {
+            return "1.0.38";
+        }
+    }
+
     private void drawFooter(GuiGraphics guiGraphics, float ease) {
         Minecraft mc = Minecraft.getInstance();
         float e = enter(age, 0.45F, 0.5F);
         int slide = (int) ((1.0F - e) * 16);
         int alpha = (int) (0xE6 * e);
-        guiGraphics.drawCenteredString(mc.font, Component.literal("RavenClient"),
+        guiGraphics.drawCenteredString(mc.font, Component.literal("RavenClient v" + version),
                 width / 2, height - 18 + slide, (alpha << 24) | 0xFFFFFF);
     }
 

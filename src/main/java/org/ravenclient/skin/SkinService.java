@@ -91,26 +91,25 @@ public final class SkinService {
     }
 
     /**
-     * Resolves an in-game name to a profile. Uses the public Minecraft services identity
-     * endpoint first, falling back to the legacy Mojang API.
+     * Resolves an in-game name or UUID to a profile. Uses the public Minecraft services
+     * identity endpoint first, falling back to the session server for UUID lookups.
      */
     public LookupProfile lookupName(String name) throws IOException {
         String clean = name == null ? "" : name.trim();
         if (clean.isEmpty()) throw new IOException("Enter a player name to search.");
         if (clean.matches("[0-9a-fA-F]{8}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{12}")) {
-            return new LookupProfile(clean.replace("-", ""), clean);
+            String uuid = clean.replace("-", "");
+            try {
+                JsonNode body = get(SESSION_URL + uuid, null);
+                String nameOut = body.path("name").asText("");
+                if (!nameOut.isEmpty()) return new LookupProfile(uuid, nameOut);
+            } catch (IOException ignored) {
+            }
+            return new LookupProfile(uuid, uuid);
         }
         IOException last = null;
         try {
             JsonNode body = get(BASE + "/minecraft/profile/lookup/name/" + enc(clean), null);
-            String id = body.path("id").asText("");
-            String nameOut = body.path("name").asText("");
-            if (!id.isEmpty() && !nameOut.isEmpty()) return new LookupProfile(id, nameOut);
-        } catch (IOException e) {
-            last = e;
-        }
-        try {
-            JsonNode body = get(MOJANG_NAME_URL + enc(clean), null);
             String id = body.path("id").asText("");
             String nameOut = body.path("name").asText("");
             if (!id.isEmpty() && !nameOut.isEmpty()) return new LookupProfile(id, nameOut);

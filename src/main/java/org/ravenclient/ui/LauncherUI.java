@@ -79,12 +79,14 @@ public class LauncherUI extends Application {
 
     private VBox homeRoot;
     private final StackPane pageContainer = new StackPane();
+    private StackPane sceneRoot;
     private Account account;
     private Process gameProcess;
     private OverlayManager overlayManager;
     private Dialog<Void> deviceDialog;
     private boolean busy;
     private GameLauncher.LaunchData currentLaunchData;
+    private Node welcomeOverlay;
 
     // --- nav buttons -------------------------------------------------------
     private final ToggleGroup navGroup = new ToggleGroup();
@@ -139,6 +141,7 @@ public class LauncherUI extends Application {
         root.setBottom(buildFooter());
 
         StackPane sceneRoot = new StackPane(root);
+        this.sceneRoot = sceneRoot;
         Node bootOverlay = buildBootOverlay();
         sceneRoot.getChildren().add(bootOverlay);
 
@@ -400,8 +403,165 @@ public class LauncherUI extends Application {
         FadeTransition fade = new FadeTransition(Duration.millis(450), overlay);
         fade.setFromValue(1);
         fade.setToValue(0);
-        fade.setOnFinished(e -> sceneRoot.getChildren().remove(overlay));
+        fade.setOnFinished(e -> {
+            sceneRoot.getChildren().remove(overlay);
+            onBootComplete();
+        });
         fade.play();
+    }
+
+    private void onBootComplete() {
+        if (account == null && isFirstLaunch()) {
+            showWelcomeOverlay();
+        }
+    }
+
+    private boolean isFirstLaunch() {
+        try {
+            return !Files.exists(config.launcherDir.resolve(AccountStore.ACCOUNTS_FILE));
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    private void showWelcomeOverlay() {
+        if (busy) return;
+        setBusy(true);
+        setStatus("Starting Microsoft login...");
+
+        VBox loadingBox = new VBox(16);
+        loadingBox.setAlignment(Pos.CENTER);
+        loadingBox.getStyleClass().add("welcome-overlay");
+        loadingBox.setMaxWidth(Double.MAX_VALUE);
+        loadingBox.setMaxHeight(Double.MAX_VALUE);
+
+        Label title = new Label("Welcome to RavenClient");
+        title.getStyleClass().add("welcome-title");
+
+        Label subtitle = new Label("Login to play");
+        subtitle.getStyleClass().add("welcome-subtitle");
+
+        ProgressIndicator spinner = new ProgressIndicator();
+        spinner.getStyleClass().add("welcome-spinner");
+
+        Label status = new Label("Starting login...");
+        status.getStyleClass().add("welcome-status");
+
+        loadingBox.getChildren().addAll(title, subtitle, spinner, status);
+        welcomeOverlay = loadingBox;
+        sceneRoot.getChildren().add(loadingBox);
+
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(400), loadingBox);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+        fadeIn.play();
+
+        MicrosoftAuthenticator auth = new MicrosoftAuthenticator();
+        pool.execute(() -> {
+            try {
+                DeviceCodeSession session = auth.startDeviceFlow();
+                Platform.runLater(() -> {
+                    sceneRoot.getChildren().remove(loadingBox);
+                    buildWelcomeOverlay(session);
+                });
+                Account acc = auth.waitForDeviceCode(session);
+                Platform.runLater(() -> {
+                    closeWelcomeOverlay();
+                    applyAccount(acc);
+                });
+            } catch (AuthException ex) {
+                Platform.runLater(() -> {
+                    status.setText("Error: " + ex.getMessage());
+                    status.getStyleClass().add("welcome-error");
+                    spinner.setVisible(false);
+                    setBusy(false);
+                });
+            }
+        });
+    }
+
+    private void buildWelcomeOverlay(DeviceCodeSession session) {
+        VBox overlay = new VBox(20);
+        overlay.setAlignment(Pos.CENTER);
+        overlay.getStyleClass().add("welcome-overlay");
+        overlay.setMaxWidth(Double.MAX_VALUE);
+        overlay.setMaxHeight(Double.MAX_VALUE);
+
+        Label title = new Label("Welcome to RavenClient");
+        title.getStyleClass().add("welcome-title");
+
+        Label subtitle = new Label("Login to play");
+        subtitle.getStyleClass().add("welcome-subtitle");
+
+        VBox codeCard = new VBox(12);
+        codeCard.getStyleClass().add("welcome-code-card");
+        codeCard.setAlignment(Pos.CENTER);
+        codeCard.setMaxWidth(380);
+
+        Label codeLabel = new Label("Enter this code on the Microsoft login page:");
+        codeLabel.getStyleClass().add("welcome-code-label");
+        codeLabel.setWrapText(true);
+        codeLabel.setAlignment(Pos.CENTER);
+
+        Label codeValue = new Label(session.userCode());
+        codeValue.getStyleClass().add("welcome-code-value");
+
+        HBox codeRow = new HBox(12, codeValue);
+        codeRow.setAlignment(Pos.CENTER);
+
+        Button copyButton = new Button("Copy code");
+        copyButton.getStyleClass().add("welcome-button");
+        copyButton.setMaxWidth(Double.MAX_VALUE);
+        copyButton.setOnAction(e -> {
+            javafx.scene.input.Clipboard clipboard = javafx.scene.input.Clipboard.getSystemClipboard();
+            javafx.scene.input.ClipboardContent content = new javafx.scene.input.ClipboardContent();
+            content.putString(session.userCode());
+            clipboard.setContent(content);
+            copyButton.setText("Copied!");
+            copyButton.getStyleClass().add("welcome-button-success");
+            copyButton.setDisable(true);
+            PauseTransition pause = new PauseTransition(Duration.seconds(2));
+            pause.setOnFinished(ev -> {
+                copyButton.setText("Copy code");
+                copyButton.getStyleClass().remove("welcome-button-success");
+                copyButton.setDisable(false);
+            });
+            pause.play();
+        });
+
+        Button openBrowser = new Button("Open " + session.verificationUri());
+        openBrowser.getStyleClass().add("welcome-button-primary");
+        openBrowser.setMaxWidth(Double.MAX_VALUE);
+        openBrowser.setOnAction(e -> openBrowser(session.verificationUri()));
+
+        codeCard.getChildren().addAll(codeLabel, codeRow, copyButton, openBrowser);
+
+        overlay.getChildren().addAll(title, subtitle, codeCard);
+        welcomeOverlay = overlay;
+        sceneRoot.getChildren().add(overlay);
+
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(400), overlay);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+        fadeIn.play();
+
+        openBrowser(session.verificationUri());
+    }
+
+    private void closeWelcomeOverlay() {
+        if (welcomeOverlay != null) {
+            FadeTransition fade = new FadeTransition(Duration.millis(300), welcomeOverlay);
+            fade.setFromValue(1);
+            fade.setToValue(0);
+            fade.setOnFinished(e -> {
+                if (sceneRoot != null) sceneRoot.getChildren().remove(welcomeOverlay);
+                welcomeOverlay = null;
+                setBusy(false);
+            });
+            fade.play();
+        } else {
+            setBusy(false);
+        }
     }
 
     // --- layout ------------------------------------------------------------

@@ -10,7 +10,7 @@ import java.nio.file.Path;
 
 public final class AccountStore {
 
-    private static final String ACCOUNTS_FILE = "accounts.json";
+    public static final String ACCOUNTS_FILE = "accounts.json";
 
     private AccountStore() {
     }

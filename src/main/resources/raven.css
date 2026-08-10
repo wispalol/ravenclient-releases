@@ -1154,6 +1154,123 @@
     -fx-border-width: 1;
 }
 
+/* --- Welcome overlay (first launch) ----------------------------------------- */
+
+.welcome-overlay {
+    -fx-background-color: rgba(11, 12, 16, 0.94);
+    -fx-alignment: center;
+    -fx-padding: 40;
+}
+
+.welcome-title {
+    -fx-font-size: 38px;
+    -fx-font-weight: 900;
+    -fx-text-fill: linear-gradient(to right, #00d4ff, #5b8cff, #7c5cff);
+    -fx-letter-spacing: 2px;
+    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.5), 20, 0, 0, 0);
+}
+
+.welcome-subtitle {
+    -fx-font-size: 16px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #8a8d9c;
+    -fx-letter-spacing: 1px;
+}
+
+.welcome-code-card {
+    -fx-background-color: rgba(18, 16, 32, 0.92);
+    -fx-background-radius: 18;
+    -fx-border-color: rgba(124, 92, 255, 0.35);
+    -fx-border-radius: 18;
+    -fx-border-width: 1;
+    -fx-padding: 28;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.6), 30, 0, 0, 12),
+                dropshadow(gaussian, rgba(124, 92, 255, 0.18), 35, 0, 0, 0);
+}
+
+.welcome-code-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #8a8d9c;
+    -fx-text-alignment: center;
+}
+
+.welcome-code-value {
+    -fx-font-size: 36px;
+    -fx-font-weight: 900;
+    -fx-text-fill: linear-gradient(to right, #7c5cff, #5b8cff, #00d4ff);
+    -fx-letter-spacing: 6px;
+    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.5), 14, 0, 0, 0);
+    -fx-padding: 10 28 10 28;
+    -fx-background-color: rgba(26, 24, 48, 0.8);
+    -fx-background-radius: 12;
+    -fx-border-color: rgba(124, 92, 255, 0.3);
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+}
+
+.welcome-button {
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #eaeaea;
+    -fx-background-color: rgba(22, 20, 40, 0.7);
+    -fx-background-radius: 12;
+    -fx-border-color: rgba(255, 255, 255, 0.08);
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-padding: 12 18 12 18;
+    -fx-cursor: hand;
+}
+
+.welcome-button:hover {
+    -fx-border-color: rgba(124, 92, 255, 0.5);
+    -fx-background-color: rgba(124, 92, 255, 0.12);
+}
+
+.welcome-button-primary {
+    -fx-font-size: 14px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #ffffff;
+    -fx-background-color: linear-gradient(to right, #7c5cff, #5b8cff);
+    -fx-background-radius: 12;
+    -fx-border-color: transparent;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-padding: 14 18 14 18;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.4), 14, 0, 0, 0);
+}
+
+.welcome-button-primary:hover {
+    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.65), 22, 0, 0, 0);
+}
+
+.welcome-button-success {
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #4CAF7D;
+    -fx-background-color: rgba(76, 175, 125, 0.12);
+    -fx-background-radius: 12;
+    -fx-border-color: rgba(76, 175, 125, 0.4);
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-padding: 12 18 12 18;
+}
+
+.welcome-spinner {
+    -fx-progress-color: #7c5cff;
+}
+
+.welcome-status {
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #5a5d6e;
+}
+
+.welcome-error {
+    -fx-text-fill: #ff5470;
+}
+
 .titled-pane {
     -fx-text-fill: #8a8d9c;
 }

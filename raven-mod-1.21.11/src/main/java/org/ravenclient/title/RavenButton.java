@@ -22,32 +22,40 @@ public class RavenButton extends Button {
     @Override
     protected void renderContents(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         float target = isHovered() ? 1.0F : 0.0F;
-        this.hover = Mth.lerp(Math.min(1.0F, partialTick * 12.0F), this.hover, target);
+        this.hover = Mth.lerp(Math.min(1.0F, partialTick * 10.0F), this.hover, target);
 
         int w = getWidth();
         int h = getHeight();
         int cx = getX() + w / 2;
         int cy = getY() + h / 2;
 
+        if (isFocused()) {
+            int focusPad = 5;
+            int fw = w + focusPad * 2;
+            int fh = h + focusPad * 2;
+            RavenTextures.draw(guiGraphics, RavenTextures.rounded(fw, fh), fw, fh,
+                    cx - fw / 2, cy - fh / 2, fw, fh, 0x66FFFFFF);
+        }
+
         if (hover > 0.01F) {
-            int glow = Math.max(w, h) + 28;
-            int a = (int) (72 * hover);
+            int glow = Math.max(w, h) + 32;
+            int a = (int) (50 * hover);
             RavenTextures.drawSoftDisc(guiGraphics, cx - glow / 2, cy - glow / 2, glow, glow, (a << 24) | 0xFFFFFF);
         }
 
-        float scale = 1.0F + 0.04F * hover;
+        float scale = 1.0F + 0.02F * hover;
         int sw = Math.round(w * scale);
         int sh = Math.round(h * scale);
 
-        int shadow = 0x33000000;
+        int shadow = 0x20000000;
         RavenTextures.draw(guiGraphics, RavenTextures.rounded(sw, sh), sw, sh,
-                cx - sw / 2, cy - sh / 2 + 2, sw, sh, shadow);
+                cx - sw / 2, cy - sh / 2 + 3, sw, sh, shadow);
 
-        int bg = blend(0xCCFFFFFF, 0xF7FFFFFF, hover);
+        int bg = blend(0xE6FFFFFF, 0xFFFFFFFF, hover);
         RavenTextures.draw(guiGraphics, RavenTextures.rounded(sw, sh), sw, sh,
                 cx - sw / 2, cy - sh / 2, sw, sh, bg);
 
-        int text = blend(0xFF2A2E34, 0xFF13161B, hover);
+        int text = blend(0xFF1A1D23, 0xFF000000, hover);
         guiGraphics.drawCenteredString(Minecraft.getInstance().font, getMessage(), cx, cy - 4, text);
     }
 

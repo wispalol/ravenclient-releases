@@ -177,6 +177,7 @@ public class SkinManagerUI {
         searchField = new TextField();
         searchField.setPromptText("Enter an in-game name or UUID...");
         searchField.getStyleClass().add("search-box");
+        searchField.setOnAction(e -> searchPlayer());
         searchButton = new Button("Search");
         searchButton.getStyleClass().add("primary-button");
         searchButton.setOnAction(e -> searchPlayer());
