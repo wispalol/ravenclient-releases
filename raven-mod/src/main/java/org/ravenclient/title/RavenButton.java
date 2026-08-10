@@ -7,8 +7,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
 /**
- * Clean rounded pill used for the three main menu buttons. Dark ink base that
- * lightens and gains a soft halo on hover.
+ * Clean glassy pill used for the three main menu buttons: translucent white base
+ * with a soft drop shadow, brightening with a gentle glow on hover.
  */
 public class RavenButton extends Button {
 
@@ -21,7 +21,7 @@ public class RavenButton extends Button {
     @Override
     public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         float target = isHovered() ? 1.0F : 0.0F;
-        this.hover = Mth.lerp(Math.min(1.0F, partialTick * 14.0F), this.hover, target);
+        this.hover = Mth.lerp(Math.min(1.0F, partialTick * 12.0F), this.hover, target);
 
         int w = getWidth();
         int h = getHeight();
@@ -29,21 +29,25 @@ public class RavenButton extends Button {
         int cy = getY() + h / 2;
 
         if (hover > 0.01F) {
-            int halo = Math.max(w, h) + 16;
-            int alpha = (int) (36 * hover);
-            RavenTextures.drawTinted(guiGraphics, RavenTextures.rounded(),
-                    cx - halo / 2, cy - halo / 2, halo, halo, (alpha << 24) | 0x93A2B0);
+            int glow = Math.max(w, h) + 28;
+            int a = (int) (72 * hover);
+            RavenTextures.drawSoftDisc(guiGraphics, cx - glow / 2, cy - glow / 2, glow, glow, (a << 24) | 0xFFFFFF);
         }
 
-        float scale = 1.0F + 0.03F * hover;
+        float scale = 1.0F + 0.04F * hover;
         int sw = Math.round(w * scale);
         int sh = Math.round(h * scale);
-        int col = blend(0xE63B4554, 0xFF4C5869, hover);
-        RavenTextures.drawTinted(guiGraphics, RavenTextures.rounded(),
-                cx - sw / 2, cy - sh / 2, sw, sh, col);
 
-        int textCol = blend(0xFFDDE2EA, 0xFFFFFFFF, hover);
-        guiGraphics.drawCenteredString(Minecraft.getInstance().font, getMessage(), cx, cy - 4, textCol);
+        int shadow = 0x33000000;
+        RavenTextures.draw(guiGraphics, RavenTextures.rounded(sw, sh), sw, sh,
+                cx - sw / 2, cy - sh / 2 + 2, sw, sh, shadow);
+
+        int bg = blend(0xCCFFFFFF, 0xF7FFFFFF, hover);
+        RavenTextures.draw(guiGraphics, RavenTextures.rounded(sw, sh), sw, sh,
+                cx - sw / 2, cy - sh / 2, sw, sh, bg);
+
+        int text = blend(0xFF2A2E34, 0xFF13161B, hover);
+        guiGraphics.drawCenteredString(Minecraft.getInstance().font, getMessage(), cx, cy - 4, text);
     }
 
     private static int blend(int from, int to, float t) {

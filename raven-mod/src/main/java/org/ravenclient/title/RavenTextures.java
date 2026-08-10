@@ -11,70 +11,51 @@ import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.awt.geom.Path2D;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * Lazily generates the white shape textures the title screen is drawn with
- * (soft sun disc, sakura petal, mist band, hill silhouette, rounded panel)
- * and tints them at draw time. Every texture is a square the sampler maps to
- * the requested size, so the UV math in {@link #drawTinted} stays uniform.
+ * Lazily generates the white shapes the title screen is drawn with: a feathered
+ * disc for glows/dots, and rounded-rectangle pills generated at their exact
+ * pixel size so the corners stay crisp instead of being squished by scaling.
+ * Shapes are tinted at draw time via {@link #draw}.
  */
 public final class RavenTextures {
 
-    public static final int SIZE = 512;
+    public static final int DISC_SIZE = 512;
 
-    private static ResourceLocation sun;
-    private static ResourceLocation petal;
-    private static ResourceLocation cloud;
-    private static ResourceLocation hills;
-    private static ResourceLocation rounded;
+    private static ResourceLocation softDisc;
+    private static final Map<String, ResourceLocation> roundedCache = new HashMap<>();
 
     private RavenTextures() {
     }
 
-    public static ResourceLocation sun() {
-        if (sun == null) {
-            sun = register("raven_sun", makeSun());
+    public static ResourceLocation softDisc() {
+        if (softDisc == null) {
+            softDisc = register("raven_soft_disc", makeSoftDisc());
         }
-        return sun;
+        return softDisc;
     }
 
-    public static ResourceLocation petal() {
-        if (petal == null) {
-            petal = register("raven_petal", makePetal());
+    /** Rounded-rectangle of exactly {@code width x height} pixels, cached per size. */
+    public static ResourceLocation rounded(int width, int height) {
+        String key = width + "x" + height;
+        ResourceLocation id = roundedCache.get(key);
+        if (id == null) {
+            id = register("raven_rounded_" + key, makeRounded(width, height));
+            roundedCache.put(key, id);
         }
-        return petal;
+        return id;
     }
 
-    public static ResourceLocation cloud() {
-        if (cloud == null) {
-            cloud = register("raven_cloud", makeCloud());
-        }
-        return cloud;
-    }
-
-    public static ResourceLocation hills() {
-        if (hills == null) {
-            hills = register("raven_hills", makeHills());
-        }
-        return hills;
-    }
-
-    public static ResourceLocation rounded() {
-        if (rounded == null) {
-            rounded = register("raven_rounded", makeRounded());
-        }
-        return rounded;
-    }
-
-    /** Draws a white shape texture tinted with the given ARGB color, scaled to w/h. */
-    public static void drawTinted(GuiGraphics guiGraphics, ResourceLocation texture,
-                                  int x, int y, int width, int height, int argb) {
+    /** Draws a white shape texture (of texW x texH) tinted with ARGB, scaled to w x h. */
+    public static void draw(GuiGraphics guiGraphics, ResourceLocation texture, int texW, int texH,
+                            int x, int y, int width, int height, int argb) {
         float a = ((argb >> 24) & 0xFF) / 255.0F;
         float r = ((argb >> 16) & 0xFF) / 255.0F;
         float g = ((argb >> 8) & 0xFF) / 255.0F;
@@ -82,9 +63,14 @@ public final class RavenTextures {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShaderColor(r, g, b, a);
-        guiGraphics.blit(texture, x, y, width, height, 0.0F, 0.0F, SIZE, SIZE, SIZE, SIZE);
+        guiGraphics.blit(texture, x, y, width, height, 0.0F, 0.0F, texW, texH, texW, texH);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.disableBlend();
+    }
+
+    /** Draws the feathered soft disc tinted with ARGB, scaled to w x h. */
+    public static void drawSoftDisc(GuiGraphics guiGraphics, int x, int y, int width, int height, int argb) {
+        draw(guiGraphics, softDisc(), DISC_SIZE, DISC_SIZE, x, y, width, height, argb);
     }
 
     private static ResourceLocation register(String name, BufferedImage image) {
@@ -105,13 +91,13 @@ public final class RavenTextures {
     }
 
     /** Feathered disc: solid core with a smooth falloff to a transparent edge. */
-    private static BufferedImage makeSun() {
-        BufferedImage image = new BufferedImage(SIZE, SIZE, BufferedImage.TYPE_INT_ARGB);
-        float r = SIZE / 2.0F - 4.0F;
-        for (int y = 0; y < SIZE; y++) {
-            for (int x = 0; x < SIZE; x++) {
-                float dx = (x - SIZE / 2.0F) / r;
-                float dy = (y - SIZE / 2.0F) / r;
+    private static BufferedImage makeSoftDisc() {
+        BufferedImage image = new BufferedImage(DISC_SIZE, DISC_SIZE, BufferedImage.TYPE_INT_ARGB);
+        float r = DISC_SIZE / 2.0F - 4.0F;
+        for (int y = 0; y < DISC_SIZE; y++) {
+            for (int x = 0; x < DISC_SIZE; x++) {
+                float dx = (x - DISC_SIZE / 2.0F) / r;
+                float dy = (y - DISC_SIZE / 2.0F) / r;
                 float d = (float) Math.sqrt(dx * dx + dy * dy);
                 float a;
                 if (d <= 0.72F) {
@@ -129,71 +115,16 @@ public final class RavenTextures {
         return image;
     }
 
-    /** A single sakura petal, drawn pointed at the bottom with a rounded top. */
-    private static BufferedImage makePetal() {
-        BufferedImage image = new BufferedImage(SIZE, SIZE, BufferedImage.TYPE_INT_ARGB);
+    /** Fully rounded pill at exactly width x height. */
+    private static BufferedImage makeRounded(int width, int height) {
+        BufferedImage image = new BufferedImage(Math.max(1, width), Math.max(1, height),
+                BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = image.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setColor(Color.WHITE);
-        Path2D path = new Path2D.Double();
-        path.moveTo(SIZE * 0.5, SIZE * 0.16);
-        path.curveTo(SIZE * 0.29, SIZE * 0.18, SIZE * 0.19, SIZE * 0.31, SIZE * 0.19, SIZE * 0.62);
-        path.curveTo(SIZE * 0.19, SIZE * 0.82, SIZE * 0.33, SIZE * 0.88, SIZE * 0.5, SIZE * 0.88);
-        path.curveTo(SIZE * 0.67, SIZE * 0.88, SIZE * 0.81, SIZE * 0.82, SIZE * 0.81, SIZE * 0.62);
-        path.curveTo(SIZE * 0.81, SIZE * 0.31, SIZE * 0.71, SIZE * 0.18, SIZE * 0.5, SIZE * 0.16);
-        path.closePath();
-        g.fill(path);
+        int radius = Math.max(1, height / 2);
+        g.fill(new RoundRectangle2D.Double(0, 0, width, height, radius * 2, radius * 2));
         g.dispose();
         return image;
-    }
-
-    /** Soft horizontal mist band fading out on all sides. */
-    private static BufferedImage makeCloud() {
-        BufferedImage image = new BufferedImage(SIZE, SIZE, BufferedImage.TYPE_INT_ARGB);
-        for (int y = 0; y < SIZE; y++) {
-            for (int x = 0; x < SIZE; x++) {
-                float fx = x / (SIZE - 1.0F);
-                float fy = y / (SIZE - 1.0F);
-                float a = softEdge(fx, 0.12F) * softEdge(fy, 0.30F);
-                int alpha = (int) (255.0F * a);
-                image.setRGB(x, y, (alpha << 24) | 0xFFFFFF);
-            }
-        }
-        return image;
-    }
-
-    /** Rolling hill silhouette spanning the bottom of the texture. */
-    private static BufferedImage makeHills() {
-        BufferedImage image = new BufferedImage(SIZE, SIZE, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g = image.createGraphics();
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.setColor(Color.WHITE);
-        Path2D path = new Path2D.Double();
-        path.moveTo(0, SIZE);
-        path.lineTo(0, SIZE * 0.78);
-        path.quadTo(SIZE * 0.18, SIZE * 0.49, SIZE * 0.41, SIZE * 0.64);
-        path.quadTo(SIZE * 0.55, SIZE * 0.72, SIZE * 0.68, SIZE * 0.58);
-        path.quadTo(SIZE * 0.86, SIZE * 0.41, SIZE, SIZE * 0.57);
-        path.lineTo(SIZE, SIZE);
-        path.closePath();
-        g.fill(path);
-        g.dispose();
-        return image;
-    }
-
-    private static BufferedImage makeRounded() {
-        BufferedImage image = new BufferedImage(SIZE, SIZE, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g = image.createGraphics();
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.setColor(Color.WHITE);
-        g.fill(new RoundRectangle2D.Double(4, 4, SIZE - 8, SIZE - 8, 96, 96));
-        g.dispose();
-        return image;
-    }
-
-    private static float softEdge(float f, float edgeWidth) {
-        float t = Math.min(f, 1.0F - f) / edgeWidth;
-        t = Math.max(0.0F, Math.min(1.0F, t));
-        return t * t * (3.0F - 2.0F * t);
     }
 }
