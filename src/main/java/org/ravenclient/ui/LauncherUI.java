@@ -6,6 +6,7 @@ import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
+import javafx.animation.PauseTransition;
 import javafx.animation.Timeline;
 import javafx.util.Duration;
 import javafx.util.Duration;
@@ -1582,12 +1583,33 @@ public class LauncherUI extends Application {
         msg.getStyleClass().add("device-code");
         Label code = new Label(session.userCode());
         code.getStyleClass().add("device-code-value");
+        
+        Button copyButton = new Button("Copy code");
+        copyButton.getStyleClass().add("secondary-button");
+        copyButton.setOnAction(e -> {
+            javafx.scene.input.Clipboard clipboard = javafx.scene.input.Clipboard.getSystemClipboard();
+            javafx.scene.input.ClipboardContent content = new javafx.scene.input.ClipboardContent();
+            content.putString(session.userCode());
+            clipboard.setContent(content);
+            copyButton.setText("Copied!");
+            copyButton.setDisable(true);
+            PauseTransition pause = new PauseTransition(Duration.seconds(2));
+            pause.setOnFinished(ev -> {
+                copyButton.setText("Copy code");
+                copyButton.setDisable(false);
+            });
+            pause.play();
+        });
+        
+        HBox codeRow = new HBox(10, code, copyButton);
+        codeRow.setAlignment(Pos.CENTER);
+
         Button openBrowser = new Button("Open " + session.verificationUri());
         openBrowser.getStyleClass().add("secondary-button");
         openBrowser.setMaxWidth(Double.MAX_VALUE);
         openBrowser.setOnAction(e -> openBrowser(session.verificationUri()));
 
-        VBox content = new VBox(14, msg, code, openBrowser);
+        VBox content = new VBox(14, msg, codeRow, openBrowser);
         content.setPadding(new Insets(20));
         content.setAlignment(Pos.CENTER);
 

@@ -1,6 +1,6 @@
 {
-    "version":  "1.0.34",
-    "notes":  "RavenClient 1.0.34 release.",
-    "url":  "https://github.com/wispalol/ravenclient-releases/releases/download/v1.0.34/RavenClient-update-1.0.34.zip",
-    "sha256":  "68362e3973b55c28b10def082d34380609abe45e905fb35ea64f6415da9f0bff"
+    "version":  "1.0.35",
+    "notes":  "RavenClient 1.0.35 release - Added copy-to-clipboard for device code during Microsoft sign-in",
+    "url":  "https://github.com/wispalol/ravenclient-releases/releases/download/v1.0.35/RavenClient-update-1.0.35.zip",
+    "sha256":  "126ca63e5bda09de4d45be3d043086bad293c8a487f32a1f4630bd057f339d11"
 }
