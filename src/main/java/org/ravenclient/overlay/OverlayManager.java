@@ -1,7 +1,6 @@
 package org.ravenclient.overlay;
 
 import com.sun.jna.platform.win32.User32;
-import com.sun.jna.platform.win32.WinDef;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.scene.Scene;
@@ -122,11 +121,12 @@ public class OverlayManager {
 
         keybindPoller = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "raven-keybind");
-            t.setDaemon(true);
+            t.setDaemon(false);
+            t.setPriority(Thread.MAX_PRIORITY);
             return t;
         });
-        keybindPoller.scheduleAtFixedRate(this::pollKeybind, 500, 50, TimeUnit.MILLISECONDS);
-        System.out.println("[RAVEN] OverlayManager started, polling RSHIFT");
+        keybindPoller.scheduleAtFixedRate(this::pollKeybind, 100, 16, TimeUnit.MILLISECONDS);
+        System.out.println("[RAVEN] OverlayManager started, keybind poller running at ~60Hz");
     }
 
     private void pollKeybind() {
@@ -333,15 +333,23 @@ public class OverlayManager {
 
     private void setClickThrough(boolean passThrough) {
         try {
-            WinDef.HWND hwnd = User32.INSTANCE.FindWindow(null, "RavenOverlay");
+            com.sun.jna.platform.win32.WinDef.HWND hwnd = com.sun.jna.platform.win32.User32.INSTANCE.FindWindow(null, "RavenOverlay");
             if (hwnd == null) return;
-            int exStyle = User32.INSTANCE.GetWindowLong(hwnd, -20); // GWL_EXSTYLE
+            int GWL_EXSTYLE = -20;
+            int WS_EX_LAYERED = 0x80000;
+            int WS_EX_TRANSPARENT = 0x20;
+            int WS_EX_TOOLWINDOW = 0x80;
+            int exStyle = com.sun.jna.platform.win32.User32.INSTANCE.GetWindowLong(hwnd, GWL_EXSTYLE);
             if (passThrough) {
-                User32.INSTANCE.SetWindowLong(hwnd, -20, exStyle | 0x20 | 0x80000); // WS_EX_TRANSPARENT | WS_EX_LAYERED
+                exStyle |= WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW;
             } else {
-                User32.INSTANCE.SetWindowLong(hwnd, -20, exStyle & ~0x20);
+                exStyle &= ~WS_EX_TRANSPARENT;
             }
-        } catch (Exception ignored) {}
+            com.sun.jna.platform.win32.User32.INSTANCE.SetWindowLong(hwnd, GWL_EXSTYLE, exStyle);
+            System.out.println("[RAVEN] setClickThrough=" + passThrough + " exStyle=" + Integer.toHexString(exStyle));
+        } catch (Exception e) {
+            System.out.println("[RAVEN] setClickThrough error: " + e.getMessage());
+        }
     }
 
     private void saveConfig() {
