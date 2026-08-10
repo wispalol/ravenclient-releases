@@ -1,9 +1,12 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "org.ravenclient.title.mixin",
+  "package": "org.ravenclient.hud.mixin",
   "compatibilityLevel": "JAVA_17",
-  "client": [],
+  "client": [
+    "HudRenderMixin",
+    "ClientTickMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }

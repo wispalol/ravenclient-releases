@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "ravenclient-hud",
+  "version": "${version}",
+  "name": "RavenClient HUD",
+  "description": "In-game HUD overlay and customization menu for RavenClient.",
+  "authors": [
+    "RavenClient"
+  ],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "org.ravenclient.hud.RavenHudMod"
+    ]
+  },
+  "mixins": [
+    "raven-hud.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "*",
+    "java": ">=21"
+  }
+}

@@ -278,15 +278,21 @@ public class LauncherUI extends Application {
             "Waking the grid",
             "Polishing the hunt");
 
+    private static final List<String> TIPS = List.of(
+            "Tip: Use profiles to switch between modpacks quickly.",
+            "Tip: Press Tab while on the title screen to navigate buttons.",
+            "Tip: Check the Cosmetics tab to customize your skin.",
+            "Tip: You can set custom Java paths per profile in Settings.",
+            "Tip: RavenClient auto-updates when a new version is available.");
+
     private Node buildBootOverlay() {
-        VBox box = new VBox(16);
+        VBox box = new VBox(20);
         box.setAlignment(Pos.CENTER);
         box.getStyleClass().add("boot-overlay");
 
-        // Animated background gradient
         StackPane background = new StackPane();
         background.getStyleClass().add("boot-background");
-        
+
         StackPane markBox = new StackPane();
         Label mark = new Label("R");
         mark.getStyleClass().add("boot-mark");
@@ -299,16 +305,21 @@ public class LauncherUI extends Application {
 
         ProgressBar bar = new ProgressBar(0);
         bar.getStyleClass().add("boot-progress");
-        bar.setPrefWidth(340);
+        bar.setPrefWidth(360);
+
+        Label percent = new Label("0%");
+        percent.getStyleClass().add("boot-percent");
 
         Label line = new Label(BOOT_LINES.get(0));
         line.getStyleClass().add("boot-line");
 
-        // Add floating particles effect
+        Label tip = new Label(TIPS.get(0));
+        tip.getStyleClass().add("boot-tip");
+
         VBox particlesContainer = new VBox();
         particlesContainer.getStyleClass().add("boot-particles");
         
-        box.getChildren().addAll(background, markBox, title, tagline, bar, line, particlesContainer);
+        box.getChildren().addAll(background, markBox, title, tagline, bar, percent, line, tip, particlesContainer);
         return box;
     }
 
@@ -318,21 +329,25 @@ public class LauncherUI extends Application {
         Label title = (Label) box.getChildren().get(2);
         Label tagline = (Label) box.getChildren().get(3);
         ProgressBar bar = (ProgressBar) box.getChildren().get(4);
-        Label line = (Label) box.getChildren().get(5);
+        Label percent = (Label) box.getChildren().get(5);
+        Label line = (Label) box.getChildren().get(6);
+        Label tip = (Label) box.getChildren().get(7);
 
         mark.setOpacity(0);
         title.setOpacity(0);
         tagline.setOpacity(0);
         bar.setOpacity(0);
+        percent.setOpacity(0);
         line.setOpacity(0);
+        tip.setOpacity(0);
 
         Timeline progress = new Timeline(
-                new KeyFrame(Duration.ZERO, new KeyValue(bar.opacityProperty(), 0)),
-                new KeyFrame(Duration.millis(120), new KeyValue(bar.opacityProperty(), 1)),
-                new KeyFrame(Duration.ZERO, new KeyValue(bar.progressProperty(), 0)),
-                new KeyFrame(Duration.millis(900), new KeyValue(bar.progressProperty(), 0.35, Interpolator.EASE_IN)),
-                new KeyFrame(Duration.millis(1800), new KeyValue(bar.progressProperty(), 0.75, Interpolator.EASE_BOTH)),
-                new KeyFrame(Duration.millis(2600), new KeyValue(bar.progressProperty(), 1, Interpolator.EASE_OUT)));
+                new KeyFrame(Duration.ZERO, new KeyValue(bar.opacityProperty(), 0), new KeyValue(percent.opacityProperty(), 0)),
+                new KeyFrame(Duration.millis(120), new KeyValue(bar.opacityProperty(), 1), new KeyValue(percent.opacityProperty(), 1)),
+                new KeyFrame(Duration.ZERO, new KeyValue(bar.progressProperty(), 0), new KeyValue(percent.textProperty(), "0%")),
+                new KeyFrame(Duration.millis(900), new KeyValue(bar.progressProperty(), 0.35, Interpolator.EASE_IN), new KeyValue(percent.textProperty(), "35%")),
+                new KeyFrame(Duration.millis(1800), new KeyValue(bar.progressProperty(), 0.75, Interpolator.EASE_BOTH), new KeyValue(percent.textProperty(), "75%")),
+                new KeyFrame(Duration.millis(2600), new KeyValue(bar.progressProperty(), 1, Interpolator.EASE_OUT), new KeyValue(percent.textProperty(), "100%")));
         progress.setOnFinished(e -> fadeOutBoot(overlay, sceneRoot));
         progress.play();
 
@@ -356,6 +371,27 @@ public class LauncherUI extends Application {
                     }));
         }
         messages.play();
+
+        Timeline tips = new Timeline();
+        double tipTime = 1200;
+        for (int i = 1; i < TIPS.size(); i++) {
+            final int idx = i;
+            tips.getKeyFrames().add(new KeyFrame(
+                    Duration.millis(tipTime += 1400), e -> {
+                        FadeTransition fade = new FadeTransition(Duration.millis(350), tip);
+                        fade.setFromValue(1.0);
+                        fade.setToValue(0.0);
+                        fade.setOnFinished(f -> {
+                            tip.setText(TIPS.get(idx));
+                            FadeTransition fadeIn = new FadeTransition(Duration.millis(350), tip);
+                            fadeIn.setFromValue(0.0);
+                            fadeIn.setToValue(1.0);
+                            fadeIn.play();
+                        });
+                        fade.play();
+                    }));
+        }
+        tips.play();
 
         Timeline pulse = new Timeline(
                 new KeyFrame(Duration.ZERO,
@@ -397,6 +433,11 @@ public class LauncherUI extends Application {
                 new KeyFrame(Duration.ZERO, new KeyValue(line.opacityProperty(), 0), new KeyValue(line.translateYProperty(), 6)),
                 new KeyFrame(Duration.millis(1000), new KeyValue(line.opacityProperty(), 1), new KeyValue(line.translateYProperty(), 0)));
         lineAnim.play();
+
+        Timeline tipAnim = new Timeline(
+                new KeyFrame(Duration.ZERO, new KeyValue(tip.opacityProperty(), 0), new KeyValue(tip.translateYProperty(), 6)),
+                new KeyFrame(Duration.millis(1200), new KeyValue(tip.opacityProperty(), 0.8), new KeyValue(tip.translateYProperty(), 0)));
+        tipAnim.play();
     }
 
     private void fadeOutBoot(Node overlay, StackPane sceneRoot) {

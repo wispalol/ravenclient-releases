@@ -298,13 +298,17 @@ public final class GameLauncher {
         String titleName = "raven-client-title-" + mcVersion + ".jar";
         Path titleFile = modsDir.resolve(titleName);
         if (!Files.exists(titleFile)) {
-            try (InputStream modStream = getClass().getResourceAsStream("/" + titleName)) {
-                if (modStream != null) {
-                    Files.copy(modStream, titleFile, StandardCopyOption.REPLACE_EXISTING);
-                    listener.log("RavenClient title mod installed: " + titleName);
+            InputStream modStream = getClass().getResourceAsStream("/" + titleName);
+            if (modStream == null) {
+                String fallback = fallbackTitleMod(mcVersion);
+                if (fallback != null) {
+                    titleName = "raven-client-title-" + fallback + ".jar";
+                    modStream = getClass().getResourceAsStream("/" + titleName);
                 }
-            } catch (Exception ignored) {
-                // No bundled mod for this version - skip silently
+            }
+            if (modStream != null) {
+                Files.copy(modStream, titleFile, StandardCopyOption.REPLACE_EXISTING);
+                listener.log("RavenClient title mod installed: " + titleName);
             }
         }
     }
@@ -313,6 +317,24 @@ public final class GameLauncher {
     private static String mcVersionOf(String profileId) {
         Loader loader = LoaderMeta.loaderOf(profileId);
         return loader != null ? profileId.substring(loader.prefix().length()) : profileId;
+    }
+
+    private static String fallbackTitleMod(String mcVersion) {
+        String v = mcVersion == null ? "" : mcVersion.trim();
+        if (v.isEmpty()) return null;
+
+        int lastDot = v.lastIndexOf('.');
+        if (lastDot > 0) {
+            String majorMinor = v.substring(0, lastDot);
+            String resource = "/raven-client-title-" + majorMinor + ".jar";
+            if (GameLauncher.class.getResourceAsStream(resource) != null) {
+                return majorMinor;
+            }
+        }
+
+        if (v.startsWith("26.1")) return "26.2";
+
+        return null;
     }
 
     private void downloadAssets(AssetIndexInfo info, Path assetsRoot) throws IOException {

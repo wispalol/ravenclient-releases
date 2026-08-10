@@ -3,9 +3,7 @@
   "minVersion": "0.8",
   "package": "org.ravenclient.title.mixin",
   "compatibilityLevel": "JAVA_17",
-  "client": [
-    "TitleScreenMixin"
-  ],
+  "client": [],
   "injectors": {
     "defaultRequire": 1
   }

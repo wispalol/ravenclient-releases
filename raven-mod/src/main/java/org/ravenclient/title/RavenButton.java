@@ -20,9 +20,6 @@ public class RavenButton extends Button {
 
     @Override
     public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        float target = isHovered() ? 1.0F : 0.0F;
-        this.hover = Mth.lerp(Math.min(1.0F, partialTick * 10.0F), this.hover, target);
-
         int w = getWidth();
         int h = getHeight();
         int cx = getX() + w / 2;
@@ -36,38 +33,13 @@ public class RavenButton extends Button {
                     cx - fw / 2, cy - fh / 2, fw, fh, 0x66FFFFFF);
         }
 
-        if (hover > 0.01F) {
-            int glow = Math.max(w, h) + 32;
-            int a = (int) (50 * hover);
-            RavenTextures.drawSoftDisc(guiGraphics, cx - glow / 2, cy - glow / 2, glow, glow, (a << 24) | 0xFFFFFF);
-        }
-
-        float scale = 1.0F + 0.02F * hover;
-        int sw = Math.round(w * scale);
-        int sh = Math.round(h * scale);
-
         int shadow = 0x20000000;
-        RavenTextures.draw(guiGraphics, RavenTextures.rounded(sw, sh), sw, sh,
-                cx - sw / 2, cy - sh / 2 + 3, sw, sh, shadow);
+        RavenTextures.draw(guiGraphics, RavenTextures.rounded(w, h), w, h,
+                cx - w / 2, cy - h / 2 + 3, w, h, shadow);
 
-        int bg = blend(0xE6FFFFFF, 0xFFFFFFFF, hover);
-        RavenTextures.draw(guiGraphics, RavenTextures.rounded(sw, sh), sw, sh,
-                cx - sw / 2, cy - sh / 2, sw, sh, bg);
+        RavenTextures.draw(guiGraphics, RavenTextures.rounded(w, h), w, h,
+                cx - w / 2, cy - h / 2, w, h, 0xE6FFFFFF);
 
-        int text = blend(0xFF1A1D23, 0xFF000000, hover);
-        guiGraphics.drawCenteredString(Minecraft.getInstance().font, getMessage(), cx, cy - 4, text);
-    }
-
-    private static int blend(int from, int to, float t) {
-        float k = Mth.clamp(t, 0.0F, 1.0F);
-        int a = lerp((from >> 24) & 0xFF, (to >> 24) & 0xFF, k);
-        int r = lerp((from >> 16) & 0xFF, (to >> 16) & 0xFF, k);
-        int g = lerp((from >> 8) & 0xFF, (to >> 8) & 0xFF, k);
-        int b = lerp(from & 0xFF, to & 0xFF, k);
-        return (a << 24) | (r << 16) | (g << 8) | b;
-    }
-
-    private static int lerp(int from, int to, float t) {
-        return Math.round(from + (to - from) * t);
+        guiGraphics.drawCenteredString(Minecraft.getInstance().font, getMessage(), cx, cy - 4, 0xFF1A1D23);
     }
 }

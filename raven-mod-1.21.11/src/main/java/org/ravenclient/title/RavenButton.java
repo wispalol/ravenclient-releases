@@ -37,12 +37,6 @@ public class RavenButton extends Button {
                     cx - fw / 2, cy - fh / 2, fw, fh, 0x66FFFFFF);
         }
 
-        if (hover > 0.01F) {
-            int glow = Math.max(w, h) + 32;
-            int a = (int) (50 * hover);
-            RavenTextures.drawSoftDisc(guiGraphics, cx - glow / 2, cy - glow / 2, glow, glow, (a << 24) | 0xFFFFFF);
-        }
-
         float scale = 1.0F + 0.02F * hover;
         int sw = Math.round(w * scale);
         int sh = Math.round(h * scale);
