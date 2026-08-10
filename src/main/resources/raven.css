@@ -1096,6 +1096,16 @@
     -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.35), 12, 0, 0, 0);
 }
 
+.skin-avatar-placeholder {
+    -fx-background-color: linear-gradient(135deg, #7c5cff, #5b8cff, #00d4ff);
+    -fx-background-radius: 18;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 22px;
+    -fx-font-weight: 700;
+    -fx-alignment: center;
+    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.35), 12, 0, 0, 0);
+}
+
 .player-name {
     -fx-font-size: 17px;
     -fx-font-weight: 700;

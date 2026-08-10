@@ -199,8 +199,8 @@ public final class GameLauncher {
         Path modsDir = versionDir.resolve("mods");
         Files.createDirectories(modsDir);
 
-        // Install bundled RavenClient HUD mod
-        installBundledMod(versionDir);
+        // Install bundled RavenClient mods (HUD + version-matched title screen)
+        installBundledMods(versionDir, id);
 
         // Loaders only read mods from the game's root mods/ folder, so materialize the
         // profile's mods there (and drop ones we placed for a previously launched profile).
@@ -273,23 +273,46 @@ public final class GameLauncher {
     }
 
     /**
-     * Copies the bundled RavenClient HUD mod from the launcher's resources into the
-     * version-specific mods directory so it loads with the game.
+     * Copies the bundled RavenClient mods from the launcher's resources into the
+     * version-specific mods directory so they load with the game: the HUD mod for
+     * every profile, plus the Lunar-style title-screen mod matched to the profile's
+     * Minecraft version (raven-client-title-&lt;mc&gt;.jar, skipped when none is shipped).
      */
-    private void installBundledMod(Path versionDir) throws IOException {
+    private void installBundledMods(Path versionDir, String profileId) throws IOException {
         Path modsDir = versionDir.resolve("mods");
-        Path modFile = modsDir.resolve("raven-client-hud.jar");
-        if (Files.exists(modFile)) return; // already installed
+        Files.createDirectories(modsDir);
 
-        // Look for the mod jar in the launcher's classpath/resources
-        try (InputStream modStream = getClass().getResourceAsStream("/raven-client-hud.jar")) {
-            if (modStream != null) {
-                Files.copy(modStream, modFile, StandardCopyOption.REPLACE_EXISTING);
-                listener.log("RavenClient HUD mod installed: raven-client-hud.jar");
+        Path hudFile = modsDir.resolve("raven-client-hud.jar");
+        if (!Files.exists(hudFile)) {
+            try (InputStream modStream = getClass().getResourceAsStream("/raven-client-hud.jar")) {
+                if (modStream != null) {
+                    Files.copy(modStream, hudFile, StandardCopyOption.REPLACE_EXISTING);
+                    listener.log("RavenClient HUD mod installed: raven-client-hud.jar");
+                }
+            } catch (Exception ignored) {
+                // No bundled mod - skip silently
             }
-        } catch (Exception ignored) {
-            // No bundled mod - skip silently
         }
+
+        String mcVersion = mcVersionOf(profileId);
+        String titleName = "raven-client-title-" + mcVersion + ".jar";
+        Path titleFile = modsDir.resolve(titleName);
+        if (!Files.exists(titleFile)) {
+            try (InputStream modStream = getClass().getResourceAsStream("/" + titleName)) {
+                if (modStream != null) {
+                    Files.copy(modStream, titleFile, StandardCopyOption.REPLACE_EXISTING);
+                    listener.log("RavenClient title mod installed: " + titleName);
+                }
+            } catch (Exception ignored) {
+                // No bundled mod for this version - skip silently
+            }
+        }
+    }
+
+    /** The plain Minecraft version for a profile id, e.g. {@code fabric-1.21.11} -> {@code 1.21.11}. */
+    private static String mcVersionOf(String profileId) {
+        Loader loader = LoaderMeta.loaderOf(profileId);
+        return loader != null ? profileId.substring(loader.prefix().length()) : profileId;
     }
 
     private void downloadAssets(AssetIndexInfo info, Path assetsRoot) throws IOException {

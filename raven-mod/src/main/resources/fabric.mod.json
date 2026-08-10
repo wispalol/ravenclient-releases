@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "ravenclient",
+  "version": "${version}",
+  "name": "RavenClient",
+  "description": "Lunar-inspired in-game title screen, bundled by the RavenClient launcher.",
+  "authors": [
+    "RavenClient"
+  ],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "org.ravenclient.title.RavenClientTitleMod"
+    ]
+  },
+  "mixins": [
+    "raven.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21"
+  }
+}

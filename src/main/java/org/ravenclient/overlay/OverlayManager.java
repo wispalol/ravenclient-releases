@@ -15,7 +15,9 @@ import org.ravenclient.overlay.elements.*;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +42,7 @@ public class OverlayManager {
 
     private volatile boolean guiOpen = false;
     private volatile boolean editMode = false;
-    private volatile boolean rshiftWasDown = false;
+    private final Map<Integer, Boolean> lastKeyState = new HashMap<>();
     private Process gameProcess;
 
     public static Path configDir() { return configDirectory; }
@@ -87,6 +89,8 @@ public class OverlayManager {
                 y += 0.035;
             }
         }
+        applyModuleVisibility();
+        config.ensureDefaultProfile();
 
         overlayStage = new Stage(StageStyle.TRANSPARENT);
         overlayStage.setAlwaysOnTop(true);
@@ -131,17 +135,39 @@ public class OverlayManager {
 
     private void pollKeybind() {
         try {
-            boolean rshiftDown = isKeyDown(0xA1); // VK_RSHIFT
-            if (rshiftDown != rshiftWasDown) {
-                System.out.println("[RAVEN] RSHIFT raw=" + rshiftDown + " prev=" + rshiftWasDown + " gui=" + guiOpen + " edit=" + editMode);
+            int menuVk = config.menuKey;
+            if (menuVk != 0) {
+                boolean down = isKeyDown(menuVk);
+                boolean prev = lastKeyState.computeIfAbsent(menuVk, k -> false);
+                if (down && !prev) {
+                    System.out.println("[RAVEN] Menu key (" + Keys.name(menuVk) + ") pressed, toggling GUI");
+                    Platform.runLater(this::toggleGui);
+                }
+                lastKeyState.put(menuVk, down);
             }
-            if (rshiftDown && !rshiftWasDown) {
-                System.out.println("[RAVEN] RSHIFT pressed, toggling GUI");
-                Platform.runLater(this::toggleGui);
-            }
-            rshiftWasDown = rshiftDown;
+            // Module keybinds only fire while the menu is closed, so browsing
+            // or editing never accidentally flips a mod.
+            if (!guiOpen && !editMode) pollModuleKeybinds();
         } catch (Exception e) {
             System.out.println("[RAVEN] poll error: " + e.getMessage());
+        }
+    }
+
+    private void pollModuleKeybinds() {
+        for (ModuleRegistry.ClientModule m : ModuleRegistry.MODULES) {
+            if (m.requiresMod()) continue;
+            HudConfig.ModuleConfig mc = config.module(m.id());
+            if (mc.keybind == null || mc.keybind.isBlank()) continue;
+            int vk = Keys.code(mc.keybind);
+            if (vk <= 0) continue;
+            boolean down = isKeyDown(vk);
+            boolean prev = lastKeyState.computeIfAbsent(vk, k -> false);
+            lastKeyState.put(vk, down);
+            if (down && !prev) {
+                mc.enabled = !mc.enabled;
+                System.out.println("[RAVEN] Keybind " + Keys.name(vk) + " toggled " + m.id() + " -> " + mc.enabled);
+                Platform.runLater(this::onModulesChanged);
+            }
         }
     }
 
@@ -277,7 +303,7 @@ public class OverlayManager {
     private void openGui() {
         guiOpen = true;
         setClickThrough(false);
-        ClientGui gui = new ClientGui(config, this::openEditor, this::closeGui);
+        NestGui gui = new NestGui(config, elements, this::openEditorFromMenu, this::onModulesChanged, this::closeGui);
         gui.setOpacity(0);
         root.getChildren().add(gui);
         FadeTransition ft = new FadeTransition(Duration.millis(180), gui);
@@ -286,18 +312,18 @@ public class OverlayManager {
         ft.play();
     }
 
+    /** The bird nest's "Layout" nav: close the menu, then enter layout edit mode. */
+    private void openEditorFromMenu() {
+        closeGui();
+        openEditor();
+    }
+
     private void closeGui() {
         guiOpen = false;
-        if (root.getChildren().size() > 1) {
-            javafx.scene.Node gui = root.getChildren().get(root.getChildren().size() - 1);
-            FadeTransition ft = new FadeTransition(Duration.millis(150), gui);
-            ft.setFromValue(1);
-            ft.setToValue(0);
-            ft.setOnFinished(e -> root.getChildren().remove(gui));
-            ft.play();
-        }
+        javafx.scene.Node gui = findTopOfType(NestGui.class);
+        if (gui != null) fadeOutAndRemove(gui);
         setClickThrough(true);
-        saveConfig();
+        persistConfig();
     }
 
     private void openEditor() {
@@ -319,16 +345,27 @@ public class OverlayManager {
         editMode = false;
         renderer.setEditMode(false);
         elements.forEach(el -> { el.selected = false; el.hovered = false; });
-        if (root.getChildren().size() > 1) {
-            javafx.scene.Node editor = root.getChildren().get(root.getChildren().size() - 1);
-            FadeTransition ft = new FadeTransition(Duration.millis(150), editor);
-            ft.setFromValue(1);
-            ft.setToValue(0);
-            ft.setOnFinished(e -> root.getChildren().remove(editor));
-            ft.play();
-        }
+        javafx.scene.Node editor = findTopOfType(HudEditor.class);
+        if (editor != null) fadeOutAndRemove(editor);
         setClickThrough(true);
-        saveConfig();
+        syncModulesFromElements();
+        persistConfig();
+    }
+
+    private javafx.scene.Node findTopOfType(Class<?> type) {
+        for (int i = root.getChildren().size() - 1; i >= 0; i--) {
+            javafx.scene.Node n = root.getChildren().get(i);
+            if (type.isInstance(n)) return n;
+        }
+        return null;
+    }
+
+    private void fadeOutAndRemove(javafx.scene.Node node) {
+        FadeTransition ft = new FadeTransition(Duration.millis(150), node);
+        ft.setFromValue(1);
+        ft.setToValue(0);
+        ft.setOnFinished(e -> root.getChildren().remove(node));
+        ft.play();
     }
 
     private void setClickThrough(boolean passThrough) {
@@ -354,6 +391,43 @@ public class OverlayManager {
 
     private void saveConfig() {
         try { config.save(configDirectory); } catch (Exception ignored) {}
+    }
+
+    /** Saves the current state into the active profile and writes it to disk. */
+    private void persistConfig() {
+        config.saveCurrentProfile();
+        saveConfig();
+    }
+
+    /** Called whenever modules are toggled or a profile is applied. */
+    private void onModulesChanged() {
+        elements.forEach(el -> el.bind(config));
+        applyModuleVisibility();
+        persistConfig();
+    }
+
+    /** Mirrors module.enabled onto linked HUD element visibility. */
+    private void applyModuleVisibility() {
+        for (ModuleRegistry.ClientModule m : ModuleRegistry.MODULES) {
+            if (m.requiresMod()) continue;
+            for (HudElement el : elements) {
+                if (!el.id.equals(m.id())) continue;
+                boolean firstRun = !config.modules.containsKey(m.id());
+                HudConfig.ModuleConfig mc = config.module(m.id());
+                if (firstRun) mc.enabled = el.cfg.visible; // backward compatible
+                el.cfg.visible = mc.enabled;
+            }
+        }
+    }
+
+    /** Flows element visibility (e.g. from PropertiesPanel) back into modules. */
+    private void syncModulesFromElements() {
+        for (HudElement el : elements) {
+            for (ModuleRegistry.ClientModule m : ModuleRegistry.MODULES) {
+                if (m.requiresMod()) continue;
+                if (m.id().equals(el.id)) config.module(m.id()).enabled = el.cfg.visible;
+            }
+        }
     }
 
     public void shutdown() {
