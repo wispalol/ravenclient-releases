@@ -698,13 +698,13 @@ public class LauncherUI extends Application {
         topBar.getChildren().addAll(logoMark, logoBox, topSpacer, accountInfo);
 
         // Hero card
-        VBox hero = new VBox(12);
+        VBox hero = new VBox(10);
         hero.getStyleClass().add("hero-card");
         HBox.setHgrow(hero, Priority.ALWAYS);
 
         Label heroKicker = new Label(active != null ? "PROFILE \u00B7 " + active.name().toUpperCase() : "QUICK PLAY");
         heroKicker.getStyleClass().add("hero-kicker");
-        Label heroTitle = new Label("Spread your wings");
+        Label heroTitle = new Label("Ready");
         heroTitle.getStyleClass().add("hero-title");
 
         Label loaderCaption = new Label("Loader");
@@ -712,7 +712,7 @@ public class LauncherUI extends Application {
         HBox pills = new HBox(8);
         pills.getChildren().addAll(loaderPills);
 
-        Label versionCaption = new Label("Minecraft version");
+        Label versionCaption = new Label("Version");
         versionCaption.getStyleClass().add("hero-label");
         HBox versionRow = new HBox(10, versionBox);
 
@@ -724,7 +724,7 @@ public class LauncherUI extends Application {
         Button play = new Button("PLAY");
         play.getStyleClass().add("play-button");
         play.setMaxWidth(Double.MAX_VALUE);
-        play.setPrefHeight(50);
+        play.setPrefHeight(46);
         play.setOnAction(e -> onLaunch());
 
         hero.getChildren().addAll(heroKicker, heroTitle, loaderCaption, pills,
@@ -767,8 +767,8 @@ public class LauncherUI extends Application {
         Node playerDisplay = buildPlayerDisplay();
 
         // Main layout with hero, player display, and right column
-        HBox main = new HBox(18);
-        main.setPadding(new Insets(22, 26, 22, 26));
+        HBox main = new HBox(16);
+        main.setPadding(new Insets(20, 24, 20, 24));
         main.getChildren().addAll(hero, playerDisplay, right);
         HBox.setHgrow(hero, Priority.ALWAYS);
         HBox.setHgrow(right, Priority.NEVER);

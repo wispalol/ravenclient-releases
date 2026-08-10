@@ -155,40 +155,40 @@
 
 .hero-card {
     -fx-background-color: linear-gradient(to bottom right, rgba(22, 20, 40, 0.9), rgba(15, 17, 25, 0.92));
-    -fx-background-radius: 20;
-    -fx-border-color: rgba(124, 92, 255, 0.2);
-    -fx-border-radius: 20;
+    -fx-background-radius: 18;
+    -fx-border-color: rgba(124, 92, 255, 0.18);
+    -fx-border-radius: 18;
     -fx-border-width: 1;
-    -fx-padding: 28;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 24, 0, 0, 8),
-                 dropshadow(gaussian, rgba(124, 92, 255, 0.1), 35, 0, 0, 0);
-    -fx-transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    -fx-padding: 22;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.45), 20, 0, 0, 6),
+                 dropshadow(gaussian, rgba(124, 92, 255, 0.08), 28, 0, 0, 0);
+    -fx-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .hero-card:hover {
-    -fx-border-color: rgba(124, 92, 255, 0.4);
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.6), 30, 0, 0, 10),
-                 dropshadow(gaussian, rgba(124, 92, 255, 0.2), 40, 0, 0, 0);
-    -fx-transform: translateY(-4px) scale(1.01);
+    -fx-border-color: rgba(124, 92, 255, 0.35);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.55), 26, 0, 0, 8),
+                 dropshadow(gaussian, rgba(124, 92, 255, 0.15), 34, 0, 0, 0);
+    -fx-transform: translateY(-3px) scale(1.01);
 }
 
 .hero-kicker {
-    -fx-font-size: 11px;
+    -fx-font-size: 10px;
     -fx-font-weight: 800;
     -fx-text-fill: #7c5cff;
-    -fx-letter-spacing: 4px;
+    -fx-letter-spacing: 3px;
 }
 
 .hero-title {
-    -fx-font-size: 32px;
+    -fx-font-size: 26px;
     -fx-font-weight: 800;
     -fx-text-fill: linear-gradient(to right, #e0d7ff, #b8a9ff 45%, #7c5cff);
     -fx-letter-spacing: 0.5px;
-    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.4), 20, 0, 0, 0);
+    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.35), 16, 0, 0, 0);
 }
 
 .hero-label {
-    -fx-font-size: 11px;
+    -fx-font-size: 10px;
     -fx-font-weight: 700;
     -fx-text-fill: #6e7183;
     -fx-letter-spacing: 1px;
@@ -224,21 +224,21 @@
 
 .play-button {
     -fx-background-color: linear-gradient(to right, #7c5cff, #5b8cff 60%, #00d4ff);
-    -fx-background-radius: 14;
+    -fx-background-radius: 12;
     -fx-text-fill: #ffffff;
-    -fx-font-size: 15px;
+    -fx-font-size: 14px;
     -fx-font-weight: 800;
-    -fx-letter-spacing: 4px;
-    -fx-padding: 14 24 14 24;
+    -fx-letter-spacing: 3px;
+    -fx-padding: 12 22 12 22;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.35), 16, 0, 0, 0);
+    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.3), 14, 0, 0, 0);
     -fx-transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .play-button:hover {
     -fx-background-color: linear-gradient(to right, #9474ff, #75a8ff 60%, #26e0ff);
-    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.55), 22, 0, 0, 0);
-    -fx-transform: translateY(-3px) scale(1.04);
+    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.5), 20, 0, 0, 0);
+    -fx-transform: translateY(-2px) scale(1.03);
 }
 
 .play-button:pressed {
@@ -247,7 +247,7 @@
 
 .play-button:disabled {
     -fx-opacity: 0.5;
-    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.15), 8, 0, 0, 0);
+    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.12), 8, 0, 0, 0);
 }
 
 /* --- Side cards --------------------------------------------------------- */
