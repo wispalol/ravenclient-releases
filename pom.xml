@@ -186,13 +186,4 @@
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>installer</id>
-            <properties>
-                <generateInstaller>true</generateInstaller>
-            </properties>
-        </profile>
-    </profiles>
 </project>

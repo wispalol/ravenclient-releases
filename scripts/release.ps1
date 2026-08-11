@@ -47,11 +47,33 @@ $cv = $cv -replace '(VERSION = ")[^"]+(")', "`${1}$Version`${2}"
 Write-NoBom (Join-Path $PSScriptRoot "..\$cvPath") $cv
 
 # --- build (clean: incremental builds can ship stale classes in the jar) ---
-Write-Host "==> mvn clean package -DskipTests$($(if ($Installer) {' -Pinstaller'} else {''}))"
-$buildArgs = @('clean', 'package', '-DskipTests', '-q')
-if ($Installer) { $buildArgs += '-Pinstaller' }
-mvn @buildArgs
+Write-Host "==> mvn clean package -DskipTests"
+mvn @('clean', 'package', '-DskipTests', '-q')
 if ($LASTEXITCODE -ne 0) { throw "Maven build failed (exit $LASTEXITCODE)" }
+
+# --- build the single-file installer with Inno Setup (needs ISCC.exe) ---
+if ($Installer) {
+    $iscc = Get-Command iscc -ErrorAction SilentlyContinue
+    if (-not $iscc) {
+        foreach ($candidate in @(
+            "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe",
+            "$env:ProgramFiles\Inno Setup 6\ISCC.exe",
+            "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+        )) {
+            if (Test-Path -LiteralPath $candidate) { $iscc = Get-Item -LiteralPath $candidate; break }
+        }
+    }
+    if (-not $iscc) { throw 'Inno Setup (ISCC.exe) not found. Install Inno Setup 6 or build without -Installer.' }
+    $isccPath = if ($iscc -is [System.Management.Automation.CommandInfo]) { $iscc.Source } else { $iscc.FullName }
+    $iss = Join-Path $PSScriptRoot 'installer.iss'
+    Write-Host "==> $isccPath /DMyAppVersion=$Version $iss"
+    & $isccPath /DMyAppVersion=$Version $iss
+    if ($LASTEXITCODE -ne 0) { throw "Inno Setup build failed (exit $LASTEXITCODE)" }
+    if (-not (Test-Path -LiteralPath (Join-Path $PSScriptRoot "..\target\$SetupName"))) {
+        throw "Installer not produced: $SetupName"
+    }
+    Write-Host "==> Installer built: $SetupName"
+}
 
 # --- checksum + manifest (points at the PUBLIC release repo) ---
 $target = Join-Path $PSScriptRoot '..\target'
@@ -102,7 +124,7 @@ Write-Host "==> update.json published to $ReleaseRepo"
 $releaseBody = @{
     tag_name = $Tag
     name     = "RavenClient $Version"
-    body     = "RavenClient $Version`n`nUpdate zip: $ZipName"
+    body     = "RavenClient $Version`n`nInstaller: $SetupName`nUpdate zip: $ZipName"
 } | ConvertTo-Json
 $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$ReleaseRepo/releases" `
     -Headers $headers -Method Post -ContentType 'application/json' -Body $releaseBody
