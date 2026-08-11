@@ -275,8 +275,7 @@ public final class GameLauncher {
     /**
      * Copies the bundled RavenClient mods from the launcher's resources into the
      * version-specific mods directory so they load with the game: the HUD mod for
-     * every profile, plus the Lunar-style title-screen mod matched to the profile's
-     * Minecraft version (raven-client-title-&lt;mc&gt;.jar, skipped when none is shipped).
+     * every supported profile.
      */
     private void installBundledMods(Path versionDir, String profileId) throws IOException {
         Path modsDir = versionDir.resolve("mods");
@@ -298,47 +297,12 @@ public final class GameLauncher {
                 // No bundled mod - skip silently
             }
         }
-
-        String titleName = "raven-client-title-" + mcVersion + ".jar";
-        Path titleFile = modsDir.resolve(titleName);
-        if (!Files.exists(titleFile)) {
-            InputStream modStream = getClass().getResourceAsStream("/" + titleName);
-            if (modStream == null) {
-                String fallback = fallbackTitleMod(mcVersion);
-                if (fallback != null) {
-                    titleName = "raven-client-title-" + fallback + ".jar";
-                    modStream = getClass().getResourceAsStream("/" + titleName);
-                }
-            }
-            if (modStream != null) {
-                Files.copy(modStream, titleFile, StandardCopyOption.REPLACE_EXISTING);
-                listener.log("RavenClient title mod installed: " + titleName);
-            }
-        }
     }
 
     /** The plain Minecraft version for a profile id, e.g. {@code fabric-1.21.11} -> {@code 1.21.11}. */
     private static String mcVersionOf(String profileId) {
         Loader loader = LoaderMeta.loaderOf(profileId);
         return loader != null ? profileId.substring(loader.prefix().length()) : profileId;
-    }
-
-    private static String fallbackTitleMod(String mcVersion) {
-        String v = mcVersion == null ? "" : mcVersion.trim();
-        if (v.isEmpty()) return null;
-
-        int lastDot = v.lastIndexOf('.');
-        if (lastDot > 0) {
-            String majorMinor = v.substring(0, lastDot);
-            String resource = "/raven-client-title-" + majorMinor + ".jar";
-            if (GameLauncher.class.getResourceAsStream(resource) != null) {
-                return majorMinor;
-            }
-        }
-
-        if (v.startsWith("26.1")) return "26.2";
-
-        return null;
     }
 
     private void downloadAssets(AssetIndexInfo info, Path assetsRoot) throws IOException {
