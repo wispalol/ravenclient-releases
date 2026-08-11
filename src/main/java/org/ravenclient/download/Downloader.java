@@ -22,6 +22,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public final class Downloader {
 
+    private static final AtomicLong PART_COUNTER = new AtomicLong();
+
     public interface Progress {
         void onProgress(long done, long total, String currentFile);
     }
@@ -42,8 +44,16 @@ public final class Downloader {
             }
         }
         Files.createDirectories(target.getParent());
-        Path tmp = target.resolveSibling(target.getFileName() + ".part");
-        Http.download(entry.url(), tmp);
+        // Unique temp name so two launcher runs downloading the same library never
+        // fight over the same .part file.
+        String suffix = System.currentTimeMillis() + "-" + PART_COUNTER.incrementAndGet();
+        Path tmp = target.resolveSibling(target.getFileName() + ".part" + suffix);
+        try {
+            Http.download(entry.url(), tmp);
+        } catch (IOException e) {
+            Files.deleteIfExists(tmp);
+            throw e;
+        }
         if (entry.sha1() != null && !entry.sha1().isBlank()) {
             String actual = sha1(tmp);
             if (!actual.equalsIgnoreCase(entry.sha1())) {
@@ -52,18 +62,45 @@ public final class Downloader {
                         + " (expected " + entry.sha1() + ", got " + actual + ")");
             }
         }
-        // On Windows, the target file might be locked by another process (e.g., Minecraft).
-        // Try the move, and if it fails, delete first and then move.
-        try {
-            Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            if (e.getMessage() != null && e.getMessage().contains("being used by another process")) {
-                Files.deleteIfExists(target);
-                Files.move(tmp, target);
-            } else {
-                throw e;
+        // On Windows, the target file might be locked by another process (a running
+        // Minecraft instance has the library loaded, a virus scanner is scanning it,
+        // or a second launcher click is downloading the same library concurrently).
+        // Retry briefly to ride out transient locks; if the file stays locked, give up
+        // with a clear message instead of a raw stack trace.
+        IOException last = null;
+        for (int attempt = 0; attempt < 10; attempt++) {
+            try {
+                Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
+                return;
+            } catch (IOException e) {
+                boolean locked = e.getMessage() != null
+                        && e.getMessage().contains("being used by another process");
+                if (!locked) {
+                    Files.deleteIfExists(tmp);
+                    throw e;
+                }
+                last = e;
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    Files.deleteIfExists(tmp);
+                    throw new IOException("Interrupted while installing " + target, ie);
+                }
             }
         }
+        Files.deleteIfExists(tmp);
+        // A concurrent launcher may have installed a valid copy while we were retrying.
+        if (entry.sha1() != null && !entry.sha1().isBlank()) {
+            try {
+                if (Files.exists(target) && sha1(target).equalsIgnoreCase(entry.sha1())) return;
+            } catch (IOException ignored) {
+                // fall through to the error below
+            }
+        }
+        throw new IOException(target + " is locked by another process (a running "
+                + "Minecraft instance may have this library loaded). Close Minecraft "
+                + "and try again.", last);
     }
 
     public static void downloadAll(List<Entry> entries, int threads, Progress progress) throws IOException {

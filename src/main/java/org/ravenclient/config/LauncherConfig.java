@@ -1,11 +1,15 @@
 package org.ravenclient.config;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.ravenclient.util.Json;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class LauncherConfig {
 
@@ -25,6 +29,8 @@ public final class LauncherConfig {
     public boolean launchOnStartup = false;
     public String jvmArgs = "";
     public String gameArgs = "";
+
+    public List<String> quickJoinServers = new ArrayList<>();
 
     private LauncherConfig(Path launcherDir) {
         this.launcherDir = launcherDir;
@@ -54,6 +60,13 @@ public final class LauncherConfig {
             if (node.hasNonNull("launchOnStartup")) cfg.launchOnStartup = node.get("launchOnStartup").asBoolean(false);
             if (node.hasNonNull("jvmArgs")) cfg.jvmArgs = node.get("jvmArgs").asText("");
             if (node.hasNonNull("gameArgs")) cfg.gameArgs = node.get("gameArgs").asText("");
+            JsonNode quickServers = node.get("quickJoinServers");
+            if (quickServers != null && quickServers.isArray()) {
+                for (JsonNode s : quickServers) {
+                    String v = s.asText();
+                    if (v != null && !v.isBlank()) cfg.quickJoinServers.add(v);
+                }
+            }
         }
         return cfg;
     }
@@ -71,6 +84,8 @@ public final class LauncherConfig {
         node.put("launchOnStartup", launchOnStartup);
         node.put("jvmArgs", jvmArgs == null ? "" : jvmArgs);
         node.put("gameArgs", gameArgs == null ? "" : gameArgs);
+        ArrayNode servers = node.putArray("quickJoinServers");
+        for (String s : quickJoinServers) servers.add(s);
         Files.write(launcherDir.resolve(CONFIG_FILE),
                 Json.mapper().writerWithDefaultPrettyPrinter().writeValueAsBytes(node));
     }

@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -892,11 +893,17 @@ public class LauncherUI extends Application {
         grid.setHgap(10);
         grid.setVgap(10);
 
-        List<ServerStatus> servers = ServerStatus.FEATURED;
+        List<ServerStatus> servers = new ArrayList<>();
+        for (String addr : config.quickJoinServers) {
+            servers.add(new ServerStatus(addr, addr));
+        }
+        servers.addAll(ServerStatus.FEATURED);
+
         List<ServerTileView> views = new ArrayList<>();
         int col = 0, row = 0;
-        for (ServerStatus s : servers) {
-            ServerTileView view = serverTileView(s);
+        for (int i = 0; i < servers.size(); i++) {
+            ServerStatus s = servers.get(i);
+            ServerTileView view = serverTileView(s, i < config.quickJoinServers.size());
             grid.add(view.tile(), col, row);
             views.add(view);
             col++;
@@ -924,6 +931,10 @@ public class LauncherUI extends Application {
     }
 
     private ServerTileView serverTileView(ServerStatus s) {
+        return serverTileView(s, false);
+    }
+
+    private ServerTileView serverTileView(ServerStatus s, boolean removable) {
         VBox tile = new VBox(6);
         tile.getStyleClass().add("server-tile");
         tile.setPrefWidth(180);
@@ -937,6 +948,15 @@ public class LauncherUI extends Application {
         name.setTextOverrun(OverrunStyle.ELLIPSIS);
         HBox head = new HBox(6, dot, name);
         head.setAlignment(Pos.CENTER_LEFT);
+        if (removable) {
+            Button remove = new Button("\u00D7");
+            remove.getStyleClass().add("server-remove");
+            remove.setTooltip(new Tooltip("Remove from quick join"));
+            remove.setOnAction(e -> removeQuickServer(s.host()));
+            Region spacer = new Region();
+            HBox.setHgrow(spacer, Priority.ALWAYS);
+            head.getChildren().addAll(spacer, remove);
+        }
 
         Label host = new Label(s.host());
         host.getStyleClass().add("server-tile-host");
@@ -2029,6 +2049,10 @@ public class LauncherUI extends Application {
             setStatus("Minecraft is already running.");
             return;
         }
+        if (isGameRunningElsewhere()) {
+            setStatus("Minecraft is already running. Close it before launching again.");
+            return;
+        }
         String savedVersion = version.equals("Latest release") ? version : versionBox != null ? versionBox.getValue() : version;
         config.selectedVersion = savedVersion;
         config.memoryMb = (int) memorySlider.getValue() * 1024;
@@ -2116,7 +2140,42 @@ public class LauncherUI extends Application {
     /** Quick-join handler for the server address field. */
     private void quickJoin(String input) {
         String[] hp = splitHostPort(input);
+        if (hp[0].isBlank()) {
+            setStatus("Enter a server address first.");
+            return;
+        }
+        addQuickServer(normalizeServer(input));
         launchWithServer(hp[0], Integer.parseInt(hp[1]));
+    }
+
+    /** Adds a server to the quick-join list (deduplicated) and shows it in the list. */
+    private void addQuickServer(String address) {
+        if (!config.quickJoinServers.contains(address)) {
+            config.quickJoinServers.add(address);
+            try {
+                config.save();
+            } catch (IOException e) {
+                log("Could not save config: " + e.getMessage());
+            }
+            refreshHome();
+        }
+    }
+
+    /** Removes a server from the quick-join list. */
+    private void removeQuickServer(String address) {
+        config.quickJoinServers.remove(address);
+        try {
+            config.save();
+        } catch (IOException e) {
+            log("Could not save config: " + e.getMessage());
+        }
+        refreshHome();
+    }
+
+    /** Normalizes a server address, dropping the port when it is the default 25565. */
+    private static String normalizeServer(String addr) {
+        String[] hp = splitHostPort(addr);
+        return "25565".equals(hp[1]) ? hp[0] : hp[0] + ":" + hp[1];
     }
 
     /** Splits "host:port" (port optional, defaults to 25565). */
@@ -2131,6 +2190,22 @@ public class LauncherUI extends Application {
             }
         }
         return new String[]{addr, "25565"};
+    }
+
+    /** True when a Minecraft game from an earlier launcher session is still running. */
+    private boolean isGameRunningElsewhere() {
+        try {
+            boolean win = System.getProperty("os.name", "").toLowerCase().contains("win");
+            List<String> cmd = win
+                    ? List.of("wmic", "process", "where", "name like '%java%.exe'", "get", "commandline", "/format:list")
+                    : List.of("ps", "-ef");
+            Process p = new ProcessBuilder(cmd).redirectErrorStream(true).start();
+            String out = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            p.waitFor();
+            return out.contains("net.minecraft.client.main.Main");
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private void openGameFolder() {
