@@ -199,9 +199,6 @@ public final class GameLauncher {
         Path modsDir = versionDir.resolve("mods");
         Files.createDirectories(modsDir);
 
-        // Install bundled RavenClient mods (HUD + version-matched title screen)
-        installBundledMods(versionDir, id);
-
         // Loaders only read mods from the game's root mods/ folder, so materialize the
         // profile's mods there (and drop ones we placed for a previously launched profile).
         syncMods(versionDir);
@@ -270,33 +267,6 @@ public final class GameLauncher {
     }
 
     private record ModsSync(List<String> files) {
-    }
-
-    /**
-     * Copies the bundled RavenClient mods from the launcher's resources into the
-     * version-specific mods directory so they load with the game: the HUD mod for
-     * every supported profile.
-     */
-    private void installBundledMods(Path versionDir, String profileId) throws IOException {
-        Path modsDir = versionDir.resolve("mods");
-        Files.createDirectories(modsDir);
-
-        String mcVersion = mcVersionOf(profileId);
-        if (!mcVersion.startsWith("1.21.")) {
-            listener.log("Skipping RavenClient HUD mod for " + mcVersion + " (not supported yet)");
-            Path hudFile = modsDir.resolve("raven-client-hud.jar");
-            Files.deleteIfExists(hudFile);
-        } else {
-            Path hudFile = modsDir.resolve("raven-client-hud.jar");
-            try (InputStream modStream = getClass().getResourceAsStream("/raven-client-hud.jar")) {
-                if (modStream != null) {
-                    Files.copy(modStream, hudFile, StandardCopyOption.REPLACE_EXISTING);
-                    listener.log("RavenClient HUD mod installed: raven-client-hud.jar");
-                }
-            } catch (Exception ignored) {
-                // No bundled mod - skip silently
-            }
-        }
     }
 
     /** The plain Minecraft version for a profile id, e.g. {@code fabric-1.21.11} -> {@code 1.21.11}. */

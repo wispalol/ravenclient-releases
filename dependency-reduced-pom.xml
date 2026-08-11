@@ -4,7 +4,7 @@
   <groupId>org.ravenclient</groupId>
   <artifactId>ravenclient</artifactId>
   <name>RavenClient</name>
-  <version>1.0.57</version>
+  <version>1.0.67</version>
   <description>An open-source Minecraft launcher with Microsoft account support.</description>
   <build>
     <plugins>
@@ -139,14 +139,6 @@
       </plugin>
     </plugins>
   </build>
-  <profiles>
-    <profile>
-      <id>installer</id>
-      <properties>
-        <generateInstaller>true</generateInstaller>
-      </properties>
-    </profile>
-  </profiles>
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
     <jpackage.input.dir>${project.build.directory}/jpackage-input</jpackage.input.dir>
