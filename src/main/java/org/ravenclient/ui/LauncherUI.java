@@ -1199,8 +1199,10 @@ public class LauncherUI extends Application {
     }
 
     private void refreshHome() {
+        boolean showingHome = !pageContainer.getChildren().isEmpty()
+                && pageContainer.getChildren().get(0) == homeRoot;
         buildHome();
-        if (!pageContainer.getChildren().isEmpty() && pageContainer.getChildren().get(0) == homeRoot) {
+        if (showingHome) {
             pageContainer.getChildren().setAll(homeRoot);
         }
     }

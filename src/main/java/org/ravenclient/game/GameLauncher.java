@@ -420,12 +420,12 @@ public final class GameLauncher {
         if (jvm != null && jvm.isArray()) {
             for (JsonNode arg : jvm) {
                 if (arg.isTextual()) {
-                    addJvmArg(cmd, arg.asText(), data, account);
+                    addJvmArg(cmd, arg.asText(), data, account, serverHost, serverPort);
                 } else if (arg.isObject() && rulesMatch(arg.path("rules"))) {
                     JsonNode value = arg.path("value");
-                    if (value.isTextual()) addJvmArg(cmd, value.asText(), data, account);
+                    if (value.isTextual()) addJvmArg(cmd, value.asText(), data, account, serverHost, serverPort);
                     else if (value.isArray()) {
-                        for (JsonNode v : value) addJvmArg(cmd, v.asText(), data, account);
+                        for (JsonNode v : value) addJvmArg(cmd, v.asText(), data, account, serverHost, serverPort);
                     }
                 }
             }
@@ -437,21 +437,24 @@ public final class GameLauncher {
         cmd.add(data.meta().mainClass() != null && !data.meta().mainClass().isBlank()
                 ? data.meta().mainClass() : "net.minecraft.client.main.Main");
 
-        // Game arguments.
+        // Game arguments. When joining a server we enable the version manifest's
+        // is_quick_play_multiplayer feature so the game auto-connects via its native
+        // quickPlay path (the only auto-join mechanism 26.x versions support).
+        boolean joiningServer = serverHost != null && !serverHost.isBlank();
         JsonNode game = data.meta().arguments() != null ? data.meta().arguments().path("game") : null;
         if (game != null && game.isArray()) {
             for (JsonNode arg : game) {
                 if (arg.isTextual()) {
-                    String s = substitute(arg.asText(), data, account);
+                    String s = substitute(arg.asText(), data, account, serverHost, serverPort);
                     if (s != null && !s.isBlank()) cmd.add(s);
-                } else if (arg.isObject() && rulesMatch(arg.path("rules"))) {
+                } else if (arg.isObject() && rulesMatch(arg.path("rules"), joiningServer)) {
                     JsonNode value = arg.path("value");
                     if (value.isTextual()) {
-                        String s = substitute(value.asText(), data, account);
+                        String s = substitute(value.asText(), data, account, serverHost, serverPort);
                         if (s != null && !s.isBlank()) cmd.add(s);
                     } else if (value.isArray()) {
                         for (JsonNode v : value) {
-                            String s = substitute(v.asText(), data, account);
+                            String s = substitute(v.asText(), data, account, serverHost, serverPort);
                             if (s != null && !s.isBlank()) cmd.add(s);
                         }
                     }
@@ -461,7 +464,7 @@ public final class GameLauncher {
             // Legacy versions (pre-1.13) use a flat minecraftArguments string.
             String legacy = data.meta().minecraftArguments();
             if (legacy != null && !legacy.isBlank()) {
-                cmd.addAll(splitArgs(substitute(legacy, data, account)));
+                cmd.addAll(splitArgs(substitute(legacy, data, account, serverHost, serverPort)));
             }
         }
 
@@ -477,7 +480,7 @@ public final class GameLauncher {
         return cmd;
     }
 
-    private void addJvmArg(List<String> cmd, String raw, LaunchData data, Account account) {
+    private void addJvmArg(List<String> cmd, String raw, LaunchData data, Account account, String serverHost, int serverPort) {
         if (raw == null || raw.isBlank()) return;
         if (raw.equals("-cp") || raw.equals("${classpath}") || raw.startsWith("-Djava.library.path=")) return;
         // Fabric/modern version JSON can ship a removed --sun-misc-unsafe-memory-access
@@ -485,7 +488,7 @@ public final class GameLauncher {
         if (javaMajorForGame(data) < 23 && raw.startsWith("--sun-misc-unsafe-memory-access")) {
             return;
         }
-        cmd.add(substitute(raw, data, account));
+        cmd.add(substitute(raw, data, account, serverHost, serverPort));
     }
 
     /**
@@ -533,8 +536,12 @@ public final class GameLauncher {
         return requiredJavaMajor(data);
     }
 
-    private String substitute(String input, LaunchData data, Account account) {
+    private String substitute(String input, LaunchData data, Account account, String serverHost, int serverPort) {
+        String quickPlay = (serverHost != null && !serverHost.isBlank())
+                ? serverHost + (serverPort > 0 ? ":" + serverPort : "")
+                : "";
         return input
+                .replace("${quickPlayMultiplayer}", quickPlay)
                 .replace("${auth_player_name}", account.username())
                 .replace("${version_name}", data.id())
                 .replace("${game_directory}", data.gameDir().toString())
@@ -591,10 +598,14 @@ public final class GameLauncher {
 
     /** Evaluates a library/argument rules array. Versions that don't match are excluded. */
     static boolean rulesMatch(JsonNode rules) {
+        return rulesMatch(rules, false);
+    }
+
+    static boolean rulesMatch(JsonNode rules, boolean quickPlayMultiplayer) {
         if (rules == null || !rules.isArray() || rules.isEmpty()) return true;
         boolean result = false;
         for (JsonNode rule : rules) {
-            if (ruleApplies(rule)) {
+            if (ruleApplies(rule, quickPlayMultiplayer)) {
                 result = !"disallow".equals(rule.path("action").asText("allow"));
             }
         }
@@ -602,6 +613,10 @@ public final class GameLauncher {
     }
 
     private static boolean ruleApplies(JsonNode rule) {
+        return ruleApplies(rule, false);
+    }
+
+    private static boolean ruleApplies(JsonNode rule, boolean quickPlayMultiplayer) {
         JsonNode os = rule.path("os");
         if (os.isObject() && !os.isEmpty()) {
             String name = os.path("name").asText("");
@@ -613,8 +628,11 @@ public final class GameLauncher {
         }
         JsonNode features = rule.path("features");
         if (features.isObject() && !features.isEmpty()) {
-            // We launch without any extra features (no demo mode, no custom resolution),
-            // so feature-gated rules never apply.
+            // Feature-gated rules only ever apply when we actually enable the feature.
+            // Quick join turns on is_quick_play_multiplayer so the game auto-connects.
+            if (quickPlayMultiplayer && features.path("is_quick_play_multiplayer").asBoolean(false)) {
+                return true;
+            }
             return false;
         }
         return true;
