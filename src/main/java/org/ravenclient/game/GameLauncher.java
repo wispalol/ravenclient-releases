@@ -388,6 +388,16 @@ public final class GameLauncher {
 
     /** Launches the game and auto-connects to {@code serverHost:serverPort} when provided. */
     public Process launch(LaunchData data, Account account, String serverHost, int serverPort) throws IOException {
+        return launch(data, account, serverHost, serverPort, false);
+    }
+
+    /**
+     * Launches the game. When {@code detach} is true the game's stdout/stderr are
+     * redirected to a log file instead of this process's pipes, so the launcher can
+     * close after starting the game without breaking Minecraft's output (used by the
+     * close-on-launch / reopen-on-exit behaviour).
+     */
+    public Process launch(LaunchData data, Account account, String serverHost, int serverPort, boolean detach) throws IOException {
         List<String> cmd = buildCommand(data, account, serverHost, serverPort);
         StringBuilder sb = new StringBuilder("Launching:");
         for (String s : cmd) sb.append(' ').append(s.contains(" ") ? "\"" + s + "\"" : s);
@@ -398,9 +408,17 @@ public final class GameLauncher {
 
         ProcessBuilder pb = new ProcessBuilder(cmd);
         pb.directory(data.gameDir().toFile());
+        if (detach) {
+            Path logDir = config.launcherDir.resolve("logs");
+            Files.createDirectories(logDir);
+            pb.redirectErrorStream(true);
+            pb.redirectOutput(logDir.resolve("minecraft-stdout.log").toFile());
+        }
         Process process = pb.start();
-        new StreamGobbler(process.getInputStream(), listener).start();
-        new StreamGobbler(process.getErrorStream(), listener).start();
+        if (!detach) {
+            new StreamGobbler(process.getInputStream(), listener).start();
+            new StreamGobbler(process.getErrorStream(), listener).start();
+        }
         return process;
     }
 

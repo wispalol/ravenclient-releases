@@ -2100,16 +2100,26 @@ public class LauncherUI extends Application {
                 
                 GameLauncher.LaunchData data = gl.prepare(actualVersion);
                 currentLaunchData = data;
-                Process process = gl.launch(data, account, serverHost, serverPort);
+                boolean closeLauncher = !config.hudOverlay && AppUpdater.isPackaged();
+                Process process = gl.launch(data, account, serverHost, serverPort, closeLauncher);
                 gameProcess = process;
-                if (config.hudOverlay) {
+                if (closeLauncher) {
+                    closeLauncher = armRelauncher(process.pid());
+                } else if (config.hudOverlay) {
                     overlayManager = new OverlayManager(config.launcherDir, process);
                 }
-                Platform.runLater(() -> {
-                    setStatus("Minecraft is starting...");
-                    log("Minecraft launched (PID " + process.pid() + ").");
-                    progressBar.setVisible(false);
-                });
+                if (closeLauncher) {
+                    Platform.runLater(() -> {
+                        log("Minecraft launched (PID " + process.pid() + "). RavenClient will reopen when the game closes.");
+                        System.exit(0);
+                    });
+                } else {
+                    Platform.runLater(() -> {
+                        setStatus("Minecraft is starting...");
+                        log("Minecraft launched (PID " + process.pid() + ").");
+                        progressBar.setVisible(false);
+                    });
+                }
             } catch (Exception e) {
                 final String errorMessage = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
                 Platform.runLater(() -> {
@@ -2266,6 +2276,41 @@ public class LauncherUI extends Application {
     }
 
     private void log(String line) { appendLog(line); }
+
+    /** Spawns a detached watcher that reopens RavenClient once the game process exits. */
+    private boolean armRelauncher(long gamePid) {
+        try {
+            Path exe = AppUpdater.installDir().getParent().resolve("RavenClient.exe");
+            if (!Files.isRegularFile(exe)) {
+                return false;
+            }
+            Path bat = config.launcherDir.resolve("relaunch-client.bat");
+            Files.writeString(bat, relaunchScript());
+            new ProcessBuilder("cmd", "/c", bat.toString(), String.valueOf(gamePid), exe.toString())
+                    .redirectErrorStream(true)
+                    .start();
+            return true;
+        } catch (Exception e) {
+            final String errorMessage = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+            Platform.runLater(() -> log("Could not arm relaunch watcher: " + errorMessage));
+            return false;
+        }
+    }
+
+    private String relaunchScript() {
+        return "@echo off\r\n"
+                + "setlocal\r\n"
+                + "set \"PID=%~1\"\r\n"
+                + "set \"EXE=%~2\"\r\n"
+                + ":wait\r\n"
+                + "tasklist /FI \"PID eq %PID%\" 2>nul | find \"%PID%\" >nul\r\n"
+                + "if not errorlevel 1 (\r\n"
+                + "  timeout /t 2 /nobreak >nul\r\n"
+                + "  goto wait\r\n"
+                + ")\r\n"
+                + "start \"\" \"%EXE%\"\r\n"
+                + "del \"%~f0\"\r\n";
+    }
 
     private void setStatus(String text) { statusLabel.setText(text); }
 
