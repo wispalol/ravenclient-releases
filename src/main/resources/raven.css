@@ -1940,3 +1940,67 @@
 .boot-particles {
     -fx-background-color: transparent;
 }
+
+/* --- Browse servers -------------------------------------------------------- */
+
+.filter-pill {
+    -fx-background-color: rgba(22, 20, 40, 0.7);
+    -fx-background-radius: 11;
+    -fx-border-color: rgba(255, 255, 255, 0.06);
+    -fx-border-radius: 11;
+    -fx-border-width: 1;
+    -fx-text-fill: #8a8d9c;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-padding: 7 13 7 13;
+    -fx-cursor: hand;
+    -fx-transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.filter-pill:hover {
+    -fx-border-color: #7c5cff;
+    -fx-text-fill: #f0f0f0;
+    -fx-background-color: rgba(124, 92, 255, 0.08);
+    -fx-transform: translateY(-2px);
+}
+
+.filter-pill:selected {
+    -fx-background-color: linear-gradient(to right, #7c5cff, #5b8cff);
+    -fx-border-color: transparent;
+    -fx-text-fill: #ffffff;
+    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.4), 12, 0, 0, 0);
+}
+
+.browse-count {
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #5a5d6e;
+}
+
+.browse-label {
+    -fx-font-size: 10px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #7c5cff;
+    -fx-letter-spacing: 2px;
+}
+
+.profile-option {
+    -fx-text-fill: #eaeaea;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+}
+
+.profile-option:selected {
+    -fx-text-fill: #ffffff;
+}
+
+.profile-option .radio .dot {
+    -fx-background-color: transparent;
+    -fx-background-radius: 8;
+    -fx-transition: all 0.2s ease;
+}
+
+.profile-option:selected .radio .dot {
+    -fx-background-color: #7c5cff;
+    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.6), 8, 0, 0, 0);
+}

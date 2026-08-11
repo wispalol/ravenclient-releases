@@ -34,6 +34,7 @@ import org.ravenclient.config.ProfileStore.Profile;
 import org.ravenclient.game.GameLauncher;
 import org.ravenclient.game.Loader;
 import org.ravenclient.game.LoaderMeta;
+import org.ravenclient.meta.ServerCatalog;
 import org.ravenclient.meta.ServerStatus;
 import org.ravenclient.overlay.OverlayManager;
 import org.ravenclient.updater.AppUpdater;
@@ -49,7 +50,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -84,6 +89,7 @@ public class LauncherUI extends Application {
     private TextArea console;
 
     private Node homeRoot;
+    private Node browseRoot;
     private final StackPane pageContainer = new StackPane();
     private StackPane sceneRoot;
     private Account account;
@@ -97,6 +103,7 @@ public class LauncherUI extends Application {
     // --- nav buttons -------------------------------------------------------
     private final ToggleGroup navGroup = new ToggleGroup();
     private final ToggleButton homeBtn = navButton("Home", true);
+    private final ToggleButton browseBtn = navButton("Browse", false);
     private final ToggleButton modsBtn = navButton("Mods", false);
     private final ToggleButton versionsBtn = navButton("Versions", false);
     private final ToggleButton profilesBtn = navButton("Profiles", false);
@@ -118,6 +125,7 @@ public class LauncherUI extends Application {
     private static String navGlyph(String text) {
         switch (text) {
             case "Home": return "\u2302";          // ⌂
+            case "Browse": return "\u2315";        // ⌕
             case "Mods": return "\u25C8";          // ◈
             case "Versions": return "\u2B67";       // ⭧
             case "Profiles": return "\u2691";       // ⚑
@@ -631,11 +639,11 @@ public class LauncherUI extends Application {
         VBox.setVgrow(spacer, Priority.ALWAYS);
 
         VBox nav = new VBox(4, logoBox,
-                homeBtn, modsBtn, versionsBtn, profilesBtn, cosmeticsBtn, spacer, settingsBtn);
+                homeBtn, browseBtn, modsBtn, versionsBtn, profilesBtn, cosmeticsBtn, spacer, settingsBtn);
         nav.setPadding(new Insets(20, 10, 16, 10));
         nav.getStyleClass().add("sidebar");
 
-        for (ToggleButton b : new ToggleButton[]{homeBtn, modsBtn, versionsBtn, profilesBtn, cosmeticsBtn, settingsBtn}) {
+        for (ToggleButton b : new ToggleButton[]{homeBtn, browseBtn, modsBtn, versionsBtn, profilesBtn, cosmeticsBtn, settingsBtn}) {
             b.setOnAction(e -> selectPage(b));
         }
         return nav;
@@ -643,11 +651,12 @@ public class LauncherUI extends Application {
 
     private void selectPage(ToggleButton b) {
         b.setSelected(true);
-        for (ToggleButton other : new ToggleButton[]{homeBtn, modsBtn, versionsBtn, profilesBtn, cosmeticsBtn, settingsBtn}) {
+        for (ToggleButton other : new ToggleButton[]{homeBtn, browseBtn, modsBtn, versionsBtn, profilesBtn, cosmeticsBtn, settingsBtn}) {
             if (other != b) other.setSelected(false);
         }
         Node page;
         if (b == homeBtn) page = homeRoot != null ? homeRoot : buildHome();
+        else if (b == browseBtn) page = browseRoot != null ? browseRoot : buildBrowse();
         else if (b == modsBtn) page = buildMods();
         else if (b == versionsBtn) page = buildVersions();
         else if (b == profilesBtn) page = buildProfiles();
@@ -1014,6 +1023,267 @@ public class LauncherUI extends Application {
         VBox c = new VBox(spacing, t, d);
         c.getStyleClass().add("card");
         return c;
+    }
+
+    // --- browse servers ------------------------------------------------------
+
+    private static final int BROWSE_LIMIT = 50;
+
+    private record BrowseTile(ServerCatalog.Server server, VBox tile, Label count) {
+    }
+
+    private Node buildBrowse() {
+        Label title = new Label("Browse Servers");
+        title.getStyleClass().add("page-title");
+
+        Label countLabel = new Label();
+        countLabel.getStyleClass().add("browse-count");
+        Region headSpacer = new Region();
+        HBox.setHgrow(headSpacer, Priority.ALWAYS);
+        HBox head = new HBox(10, title, headSpacer, countLabel);
+        head.setAlignment(Pos.CENTER_LEFT);
+
+        TextField search = new TextField();
+        search.getStyleClass().add("search-box");
+        search.setPromptText("Search servers by name or address");
+        search.setPrefWidth(320);
+
+        FlowPane grid = new FlowPane(10, 10);
+        grid.setPadding(new Insets(6, 0, 12, 0));
+
+        List<BrowseTile> views = new ArrayList<>();
+        Map<String, Integer> live = new ConcurrentHashMap<>();
+        Set<String> inFlight = ConcurrentHashMap.newKeySet();
+        Map<String, BrowseTile> tileByHost = new HashMap<>();
+
+        String[] cat = {"All"};
+        String[] ver = {"Any"};
+
+        Runnable reflow = () -> {
+            List<BrowseTile> sorted = new ArrayList<>(views);
+            sorted.sort((a, b) -> {
+                int la = live.getOrDefault(a.server().host(), -1);
+                int lb = live.getOrDefault(b.server().host(), -1);
+                if (la != lb) return Integer.compare(lb, la);
+                return Integer.compare(b.server().playersAvg(), a.server().playersAvg());
+            });
+            grid.getChildren().setAll(sorted.stream().map(t -> t.tile()).toList());
+        };
+
+        final Runnable[] renderRef = new Runnable[1];
+        renderRef[0] = () -> {
+            grid.getChildren().clear();
+            views.clear();
+            tileByHost.clear();
+
+            String q = search.getText() == null ? "" : search.getText().trim().toLowerCase();
+            List<ServerCatalog.Server> filtered = new ArrayList<>();
+            for (ServerCatalog.Server s : ServerCatalog.all()) {
+                if (!cat[0].equals("All") && !s.categories().contains(cat[0])) continue;
+                if (!ver[0].equals("Any") && !matchesVersion(s.version(), ver[0])) continue;
+                if (!q.isEmpty()
+                        && !(s.name().toLowerCase().contains(q) || s.host().toLowerCase().contains(q))) continue;
+                filtered.add(s);
+            }
+            filtered.sort((a, b) -> {
+                int la = live.getOrDefault(a.host(), -1);
+                int lb = live.getOrDefault(b.host(), -1);
+                if (la != lb) return Integer.compare(lb, la);
+                return Integer.compare(b.playersAvg(), a.playersAvg());
+            });
+            if (filtered.size() > BROWSE_LIMIT) filtered = filtered.subList(0, BROWSE_LIMIT);
+
+            for (ServerCatalog.Server s : filtered) {
+                BrowseTile t = browseTile(s, live);
+                views.add(t);
+                tileByHost.put(s.host(), t);
+                grid.getChildren().add(t.tile());
+            }
+            countLabel.setText(views.size() + " of " + ServerCatalog.all().size() + " servers");
+
+            List<String> toFetch = new ArrayList<>();
+            for (BrowseTile t : views) {
+                if (live.containsKey(t.server().host()) || !inFlight.add(t.server().host())) continue;
+                toFetch.add(t.server().host());
+            }
+            if (toFetch.isEmpty()) return;
+
+            pool.execute(() -> {
+                for (String host : toFetch) {
+                    ServerStatus st = ServerStatus.fetch(host);
+                    live.put(host, st.online() ? st.onlinePlayers() : -1);
+                    BrowseTile t = tileByHost.get(host);
+                    if (t != null) {
+                        Platform.runLater(() -> {
+                            updateBrowseTile(t, st.onlinePlayers(), st.online());
+                            reflow.run();
+                        });
+                    }
+                    try {
+                        Thread.sleep(150);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        return;
+                    }
+                }
+            });
+        };
+
+        List<String> cats = new ArrayList<>();
+        cats.add("All");
+        cats.addAll(ServerCatalog.categories());
+
+        ToggleGroup catGroup = new ToggleGroup();
+        FlowPane catFlow = new FlowPane(6, 6);
+        for (String c : cats) {
+            ToggleButton pill = new ToggleButton(c);
+            pill.setToggleGroup(catGroup);
+            pill.getStyleClass().add("filter-pill");
+            pill.setSelected(c.equals("All"));
+            pill.setOnAction(e -> {
+                cat[0] = c;
+                renderRef[0].run();
+            });
+            catFlow.getChildren().add(pill);
+        }
+
+        ToggleGroup verGroup = new ToggleGroup();
+        HBox verRow = new HBox(6);
+        for (String v : List.of("Any", "1.21.x", "26.x")) {
+            ToggleButton pill = new ToggleButton(v);
+            pill.setToggleGroup(verGroup);
+            pill.getStyleClass().add("filter-pill");
+            pill.setSelected(v.equals("Any"));
+            pill.setOnAction(e -> {
+                ver[0] = v;
+                renderRef[0].run();
+            });
+            verRow.getChildren().add(pill);
+        }
+
+        search.textProperty().addListener((obs, o, n) -> renderRef[0].run());
+
+        Label catLabel = new Label("CATEGORY");
+        catLabel.getStyleClass().add("browse-label");
+        Label verLabel = new Label("VERSION");
+        verLabel.getStyleClass().add("browse-label");
+
+        VBox list = new VBox(12, head, search, catLabel, catFlow, verLabel, verRow, grid);
+        list.setPadding(new Insets(18, 32, 18, 32));
+        list.setPrefWidth(Double.MAX_VALUE);
+
+        browseRoot = new StackPane(new ScrollPane(list));
+        renderRef[0].run();
+        return browseRoot;
+    }
+
+    private BrowseTile browseTile(ServerCatalog.Server s, Map<String, Integer> live) {
+        VBox tile = new VBox(6);
+        tile.getStyleClass().add("server-tile");
+        tile.setPrefWidth(190);
+        tile.setPrefHeight(96);
+
+        Label dot = new Label("\u25CF");
+        dot.getStyleClass().add("server-status-dot");
+        Label name = new Label(s.name());
+        name.getStyleClass().add("server-tile-name");
+        name.setMaxWidth(120);
+        name.setTextOverrun(OverrunStyle.ELLIPSIS);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        HBox head = new HBox(6, dot, name, spacer);
+
+        Label host = new Label(s.address());
+        host.getStyleClass().add("server-tile-host");
+        host.setTextOverrun(OverrunStyle.ELLIPSIS);
+
+        int known = live.getOrDefault(s.host(), -1);
+        Label count = new Label(known >= 0 ? formatCount(known) + " playing" : "Checking...");
+        count.getStyleClass().add("server-tile-count");
+
+        tile.getChildren().addAll(head, host, count);
+        tile.setOnMouseClicked(e -> showServerDialog(s, live.getOrDefault(s.host(), -1)));
+        return new BrowseTile(s, tile, count);
+    }
+
+    private void updateBrowseTile(BrowseTile t, int players, boolean online) {
+        t.count().getStyleClass().removeAll("server-tile-offline-text");
+        if (online) {
+            t.count().setText(formatCount(players) + " playing");
+        } else {
+            t.count().getStyleClass().add("server-tile-offline-text");
+            t.count().setText("Offline");
+        }
+    }
+
+    private static boolean matchesVersion(String version, String filter) {
+        if (version == null || version.isBlank()) return false;
+        String v = version.toLowerCase();
+        return switch (filter) {
+            case "1.21.x" -> v.contains("1.21");
+            case "26.x" -> v.contains("26");
+            default -> true;
+        };
+    }
+
+    private void showServerDialog(ServerCatalog.Server server, int livePlayers) {
+        VBox box = new VBox(10);
+
+        Label name = new Label(server.name());
+        name.getStyleClass().add("dialog-title");
+
+        Label host = new Label(server.address());
+        host.getStyleClass().add("server-tile-host");
+
+        HBox badges = new HBox(6);
+        for (String c : server.categories()) {
+            Label b = new Label(c);
+            b.getStyleClass().add("mod-category");
+            badges.getChildren().add(b);
+        }
+
+        Label status = new Label(livePlayers >= 0 ? formatCount(livePlayers) + " playing now" : "Checking players...");
+        status.getStyleClass().add(livePlayers >= 0 ? "server-tile-count" : "muted");
+
+        box.getChildren().addAll(name, host, badges, status);
+
+        List<Profile> profiles = ProfileStore.load(config.launcherDir);
+        ToggleGroup group = new ToggleGroup();
+        List<RadioButton> options = new ArrayList<>();
+        if (profiles.isEmpty()) {
+            Label none = new Label("No saved profiles - launching with your default setup.");
+            none.getStyleClass().add("muted");
+            none.setWrapText(true);
+            box.getChildren().add(none);
+        } else {
+            Label pick = new Label("LAUNCH WITH PROFILE");
+            pick.getStyleClass().add("browse-label");
+            box.getChildren().add(pick);
+            for (Profile p : profiles) {
+                RadioButton rb = new RadioButton(p.name() + "  -  " + p.version() + " " + p.loader());
+                rb.setToggleGroup(group);
+                rb.getStyleClass().add("profile-option");
+                if (p.id().equals(config.selectedProfile)) rb.setSelected(true);
+                options.add(rb);
+                box.getChildren().add(rb);
+            }
+            if (group.getSelectedToggle() == null && !options.isEmpty()) options.get(0).setSelected(true);
+        }
+
+        Dialog<ButtonType> d = glassDialog("Join server", box);
+        ButtonType play = new ButtonType("Play?");
+        d.getDialogPane().getButtonTypes().addAll(play, new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE));
+        d.showAndWait().ifPresent(bt -> {
+            if (bt != play) return;
+            int idx = options.indexOf(group.getSelectedToggle());
+            if (idx >= 0 && idx < profiles.size()) {
+                Profile p = profiles.get(idx);
+                config.selectedProfile = p.id();
+                config.selectedVersion = p.version();
+                saveConfigQuiet();
+            }
+            launchWithServer(server.host(), server.port());
+        });
     }
 
     private Node buildMods() {

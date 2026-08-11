@@ -1,0 +1,629 @@
+{
+  "servers": [
+    {
+      "name": "Minemen Club",
+      "host": "minemen.club",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "PvP Legacy",
+      "host": "play.pvplegacy.net",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "Hoplite",
+      "host": "play.hoplite.gg",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "MunchyMC",
+      "host": "play.munchymc.com",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "ViperMC",
+      "host": "play.vipermc.net",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "VeltPvP",
+      "host": "veltpvp.com",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "PvP Land",
+      "host": "mc.pvp.land",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "PVPNETWORK",
+      "host": "pvpnetwork.online",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "Stratus Network",
+      "host": "play.stratus.network",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "GommeHD",
+      "host": "gommehd.net",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "PvP Club",
+      "host": "mcpvp.club",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "PvPZone",
+      "host": "pvpzone.net",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "PvPWars",
+      "host": "play.pvpwars.net",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "SaicoPvP",
+      "host": "saicopvp.com",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "CosmicPvP",
+      "host": "play.cosmicpvp.com",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "The Archon",
+      "host": "mc.thearchon.net",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "InvadedLands",
+      "host": "play.invadedlands.net",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "Purple Prison",
+      "host": "purpleprison.org",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "Hypixel",
+      "host": "mc.hypixel.net",
+      "port": 25565,
+      "categories": ["PvP", "SMP", "Minigames"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "CubeCraft",
+      "host": "play.cubecraft.net",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "The Hive",
+      "host": "geo.hivebedrock.network",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "PikaNetwork",
+      "host": "play.pika-network.net",
+      "port": 25565,
+      "categories": ["PvP", "SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "JartexNetwork",
+      "host": "play.jartexnetwork.com",
+      "port": 25565,
+      "categories": ["PvP", "SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "BlocksMC",
+      "host": "blocksmc.com",
+      "port": 25565,
+      "categories": ["PvP", "SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "Herobrine.org",
+      "host": "mc.herobrine.org",
+      "port": 25565,
+      "categories": ["PvP", "SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "MineSuperior",
+      "host": "play.minesuperior.com",
+      "port": 25565,
+      "categories": ["PvP", "SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "FadeCloud",
+      "host": "play.fadecloud.com",
+      "port": 25565,
+      "categories": ["PvP", "SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "MCHub",
+      "host": "mchub.com",
+      "port": 25565,
+      "categories": ["PvP", "SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "Complex Gaming",
+      "host": "hub.mc-complex.com",
+      "port": 25565,
+      "categories": ["PvP", "SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "OPBlocks",
+      "host": "play.opblocks.com",
+      "port": 25565,
+      "categories": ["PvP", "SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "ManaCube",
+      "host": "play.manacube.com",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "Lunar Network",
+      "host": "play.lunar.gg",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "Mineverse",
+      "host": "mineverse.com",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "Minewind",
+      "host": "mc.minewind.com",
+      "port": 25565,
+      "categories": ["PvP", "SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "2b2t",
+      "host": "2b2t.org",
+      "port": 25565,
+      "categories": ["PvP", "SMP"],
+      "version": "1.12.2 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "9b9t",
+      "host": "9b9t.com",
+      "port": 25565,
+      "categories": ["PvP", "SMP"],
+      "version": "1.12.2 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "Constantiam",
+      "host": "constantiam.net",
+      "port": 25565,
+      "categories": ["PvP", "SMP"],
+      "version": "1.12.2 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "Lifeboat",
+      "host": "play.lbsg.net",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "Wynncraft",
+      "host": "play.wynncraft.com",
+      "port": 25565,
+      "categories": ["PvP", "SMP"],
+      "version": "1.20 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "MCC Island",
+      "host": "play.mccisland.net",
+      "port": 25565,
+      "categories": ["PvP", "SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "AkumaMC",
+      "host": "mc.akumamc.net",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "MineBerry",
+      "host": "mc.mineberry.org",
+      "port": 25565,
+      "categories": ["PvP", "SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "CraftRise",
+      "host": "play.craftrise.com.tr",
+      "port": 25565,
+      "categories": ["PvP", "SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "Twerion",
+      "host": "twerion.net",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "Redesky",
+      "host": "redesky.com",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "Gamster",
+      "host": "mc.gamster.org",
+      "port": 25565,
+      "categories": ["PvP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "ExtremeCraft",
+      "host": "play.extremecraft.net",
+      "port": 25565,
+      "categories": ["PvP", "SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "Snapcraft",
+      "host": "play.snapcraft.net",
+      "port": 25565,
+      "categories": ["PvP", "SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "MineRival",
+      "host": "play.minerival.org",
+      "port": 25565,
+      "categories": ["PvP", "SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "PurpleMC",
+      "host": "play.purplemc.net",
+      "port": 25565,
+      "categories": ["PvP", "SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "DonutSMP",
+      "host": "donutsmp.net",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "Lifesteal SMP",
+      "host": "lifestealsmp.com",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "EarthMC",
+      "host": "play.earthmc.net",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.20.4",
+      "playersAvg": 0
+    },
+    {
+      "name": "Stoneworks",
+      "host": "play.stoneworks.gg",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.18 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "DaniSMP",
+      "host": "play.danismp.net",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "VitalSMP",
+      "host": "play.vitalsmp.net",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "The Seed",
+      "host": "theseedmc.com",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "BananaSMP",
+      "host": "play.bananasmp.com",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "CozyMC",
+      "host": "play.cozymc.net",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "Twenture",
+      "host": "play.twenture.net",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "BlossomCraft",
+      "host": "play.blossomcraft.org",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "TogetherCraft",
+      "host": "play.togethercraft.org",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "InsanityCraft",
+      "host": "play.insanitycraft.net",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "LemonCloud",
+      "host": "play.lemoncloud.org",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "MoxMC",
+      "host": "play.moxmc.net",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "FreshSMP",
+      "host": "play.freshsmp.net",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "OneBlock",
+      "host": "oneblockmc.com",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "TubNet",
+      "host": "play.tubnet.gg",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "EarthSMP",
+      "host": "play.earthsmp.com",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "King SMP",
+      "host": "play.kingsmp.net",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "WildWood",
+      "host": "play.wildwoodmc.net",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "6b6t",
+      "host": "6b6t.org",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.12.2 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "MineLatino",
+      "host": "mc.minelatino.com",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "PirateCraft",
+      "host": "mc.piratemc.com",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "WilderCraft",
+      "host": "play.wildercraft.net",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "Skyblock",
+      "host": "skyblock.net",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "CatCraft",
+      "host": "play.catcraft.net",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    },
+    {
+      "name": "Minescape",
+      "host": "minescape.net",
+      "port": 25565,
+      "categories": ["SMP"],
+      "version": "1.8 - 26.2",
+      "playersAvg": 0
+    }
+  ]
+}
+
