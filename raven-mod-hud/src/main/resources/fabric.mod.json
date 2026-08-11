@@ -14,9 +14,6 @@
       "org.ravenclient.hud.RavenHudMod"
     ]
   },
-  "mixins": [
-    "raven-hud.mixins.json"
-  ],
   "depends": {
     "fabricloader": ">=0.16.0",
     "minecraft": "*",

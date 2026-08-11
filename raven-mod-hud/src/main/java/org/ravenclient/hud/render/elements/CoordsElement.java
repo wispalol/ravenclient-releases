@@ -8,22 +8,22 @@ public class CoordsElement extends HudElement {
 	public CoordsElement() { super("coords", "Coordinates"); }
 
 	@Override
-	public void render(net.minecraft.client.gui.GuiGraphics guiGraphics, double sw, double sh, boolean editMode) {
-		if (!cfg.visible && !editMode) return;
-		double x = px(sw), y = py(sh), w = pw(sw), h = ph(sh);
-		drawBackground(guiGraphics, x, y, w, h);
-		String text = editMode ? "X: 128  Y: 64  Z: -256" : getCoords();
-		drawText(guiGraphics, text, x + 4, y + h - 6);
+	public void render(GuiGraphics g, int sw, int sh, boolean edit) {
+		if (!cfg.visible) return;
+		int x = (int)(cfg.x * sw);
+		int y = (int)(cfg.y * sh);
+		int w = (int)(cfg.width * sw);
+		int h = (int)(cfg.height * sh);
+		drawBg(g, x, y, w, h);
+		String text = "XYZ: " + getCoords();
+		drawText(g, text, x + 4, y + h - 6);
 	}
 
 	private String getCoords() {
 		Minecraft client = Minecraft.getInstance();
 		if (client.player != null) {
-			double x = client.player.getX();
-			double y = client.player.getY();
-			double z = client.player.getZ();
-			return String.format("X: %.0f  Y: %.0f  Z: %.0f", x, y, z);
+			return String.format("%.0f / %.0f / %.0f", client.player.getX(), client.player.getY(), client.player.getZ());
 		}
-		return "X: 0  Y: 64  Z: 0";
+		return "0 / 64 / 0";
 	}
 }

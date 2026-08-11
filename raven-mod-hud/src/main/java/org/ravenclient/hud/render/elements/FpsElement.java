@@ -1,6 +1,5 @@
 package org.ravenclient.hud.render.elements;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import org.ravenclient.hud.render.HudElement;
 
@@ -12,8 +11,8 @@ public class FpsElement extends HudElement {
 	public FpsElement() { super("fps", "FPS"); }
 
 	@Override
-	public void render(net.minecraft.client.gui.GuiGraphics guiGraphics, double sw, double sh, boolean editMode) {
-		if (!cfg.visible && !editMode) return;
+	public void render(GuiGraphics g, int sw, int sh, boolean edit) {
+		if (!cfg.visible) return;
 		frames++;
 		long now = System.nanoTime();
 		if (now - lastTime >= 1_000_000_000L) {
@@ -21,9 +20,11 @@ public class FpsElement extends HudElement {
 			frames = 0;
 			lastTime = now;
 		}
-		double x = px(sw), y = py(sh), w = pw(sw), h = ph(sh);
-		drawBackground(guiGraphics, x, y, w, h);
-		String text = editMode ? "FPS: 120" : "FPS: " + fps;
-		drawText(guiGraphics, text, x + 4, y + h - 6);
+		int x = (int)(cfg.x * sw);
+		int y = (int)(cfg.y * sh);
+		int w = (int)(cfg.width * sw);
+		int h = (int)(cfg.height * sh);
+		drawBg(g, x, y, w, h);
+		drawText(g, "FPS: " + fps, x + 4, y + h - 6);
 	}
 }

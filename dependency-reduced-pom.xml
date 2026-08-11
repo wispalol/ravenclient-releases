@@ -4,7 +4,7 @@
   <groupId>org.ravenclient</groupId>
   <artifactId>ravenclient</artifactId>
   <name>RavenClient</name>
-  <version>1.0.45</version>
+  <version>1.0.57</version>
   <description>An open-source Minecraft launcher with Microsoft account support.</description>
   <build>
     <plugins>

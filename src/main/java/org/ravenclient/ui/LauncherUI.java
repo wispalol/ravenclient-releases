@@ -34,6 +34,8 @@ import org.ravenclient.config.ProfileStore.Profile;
 import org.ravenclient.game.GameLauncher;
 import org.ravenclient.game.Loader;
 import org.ravenclient.game.LoaderMeta;
+import org.ravenclient.meta.NewsFeed;
+import org.ravenclient.meta.ServerStatus;
 import org.ravenclient.overlay.OverlayManager;
 import org.ravenclient.updater.AppUpdater;
 import org.ravenclient.updater.ClientVersion;
@@ -77,7 +79,7 @@ public class LauncherUI extends Application {
     private Label statusLabel;
     private TextArea console;
 
-    private VBox homeRoot;
+    private Node homeRoot;
     private final StackPane pageContainer = new StackPane();
     private StackPane sceneRoot;
     private Account account;
@@ -722,6 +724,14 @@ public class LauncherUI extends Application {
         logoSub.getStyleClass().add("logo-sub");
         logoBox.getChildren().addAll(logoTitle, logoSub);
 
+        Label greeting = new Label("Welcome back, " + (account != null ? accountLabel.getText() : "raven") + " \uD83D\uDC4B");
+        greeting.getStyleClass().add("welcome-greeting");
+        greeting.setMaxWidth(280);
+        greeting.setTextOverrun(OverrunStyle.ELLIPSIS);
+
+        Label versionChip = new Label("v" + ClientVersion.VERSION);
+        versionChip.getStyleClass().add("version-chip");
+
         Region topSpacer = new Region();
         HBox.setHgrow(topSpacer, Priority.ALWAYS);
 
@@ -736,7 +746,7 @@ public class LauncherUI extends Application {
         HBox accountInfo = new HBox(10);
         accountInfo.setAlignment(Pos.CENTER_RIGHT);
         accountInfo.getChildren().addAll(avatar, accountName, accountButton);
-        topBar.getChildren().addAll(logoMark, logoBox, topSpacer, accountInfo);
+        topBar.getChildren().addAll(logoMark, logoBox, greeting, versionChip, topSpacer, accountInfo);
 
         // Hero card
         VBox hero = new VBox(10);
@@ -814,13 +824,20 @@ public class LauncherUI extends Application {
         HBox.setHgrow(hero, Priority.ALWAYS);
         HBox.setHgrow(right, Priority.NEVER);
 
-        // News section at the bottom
+        // Lunar-style widgets: quickplay, featured servers, news
+        Node quickplay = buildQuickplay();
+        Node servers = buildFeaturedServers();
         Node newsSection = buildNewsSection();
 
-        VBox root = new VBox(0, topBar, main, newsSection);
-        root.getStyleClass().add("home-container");
-        homeRoot = root;
-        return root;
+        VBox content = new VBox(0, topBar, main, quickplay, servers, newsSection);
+        content.getStyleClass().add("home-container");
+
+        ScrollPane scroll = new ScrollPane(content);
+        scroll.setFitToWidth(true);
+        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scroll.getStyleClass().add("home-scroll");
+        homeRoot = scroll;
+        return scroll;
     }
 
     private Node buildNewsSection() {
@@ -829,21 +846,26 @@ public class LauncherUI extends Application {
 
         VBox newsItems = new VBox(12);
         newsItems.setPadding(new Insets(16, 28, 16, 28));
-
-        newsItems.getChildren().addAll(
-            newsCard("RavenClient " + ClientVersion.VERSION + " Update", "New animated UI with enhanced visuals, smooth page transitions, and a central player skin display. Check it out!"),
-            newsCard("Minecraft " + (SUPPORTED_VERSIONS.isEmpty() ? "" : SUPPORTED_VERSIONS.get(SUPPORTED_VERSIONS.size() - 1)) + " Release", "The latest Minecraft update is now supported. Download the new version from the Versions tab.")
-        );
+        for (NewsFeed.NewsItem item : NewsFeed.defaultNews()) newsItems.getChildren().add(newsCard(item));
 
         HBox container = new HBox();
         container.setPadding(new Insets(0, 28, 20, 28));
         container.getChildren().add(newsItems);
         HBox.setHgrow(newsItems, Priority.ALWAYS);
 
-        return new VBox(0, title, container);
+        VBox section = new VBox(0, title, container);
+
+        pool.execute(() -> {
+            List<NewsFeed.NewsItem> items = NewsFeed.fetch();
+            Platform.runLater(() -> {
+                newsItems.getChildren().clear();
+                for (NewsFeed.NewsItem item : items) newsItems.getChildren().add(newsCard(item));
+            });
+        });
+        return section;
     }
 
-    private Node newsCard(String title, String desc) {
+    private Node newsCard(NewsFeed.NewsItem item) {
         VBox card = new VBox(8);
         card.getStyleClass().add("news-card");
 
@@ -851,16 +873,138 @@ public class LauncherUI extends Application {
         header.setAlignment(Pos.CENTER_LEFT);
         Label time = new Label("\u23F0");
         time.getStyleClass().add("news-time");
-        Label newsTitle = new Label(title);
+        Label newsTitle = new Label(item.title());
         newsTitle.getStyleClass().add("news-title");
         header.getChildren().addAll(time, newsTitle);
+        if (item.tag() != null && !item.tag().isBlank()) {
+            Label tag = new Label(item.tag());
+            tag.getStyleClass().add("news-tag");
+            header.getChildren().add(tag);
+        }
 
-        Label newsDesc = new Label(desc);
+        Label newsDesc = new Label(item.body());
         newsDesc.setWrapText(true);
         newsDesc.getStyleClass().add("news-desc");
 
         card.getChildren().addAll(header, newsDesc);
         return card;
+    }
+
+    // --- quickplay + featured servers -------------------------------------
+
+    private Node buildQuickplay() {
+        Label title = new Label("Quickplay");
+        title.getStyleClass().add("section-label");
+
+        HBox bar = new HBox(8);
+        bar.getStyleClass().add("quickplay-bar");
+        List<Profile> profiles = ProfileStore.load(config.launcherDir);
+        if (profiles.isEmpty()) {
+            Label empty = new Label("No profiles yet - create one in Profiles to quickplay.");
+            empty.getStyleClass().add("muted");
+            empty.setPadding(new Insets(4, 12, 4, 12));
+            bar.getChildren().add(empty);
+        } else {
+            for (Profile p : profiles) {
+                Button chip = new Button(p.name());
+                chip.getStyleClass().add("quickplay-chip");
+                chip.setTooltip(new Tooltip(p.version() + " \u00B7 " + p.loader()));
+                chip.setOnAction(e -> playProfile(p));
+                bar.getChildren().add(chip);
+            }
+        }
+
+        HBox wrap = new HBox(bar);
+        wrap.setPadding(new Insets(0, 28, 4, 28));
+        HBox.setHgrow(bar, Priority.ALWAYS);
+        return new VBox(0, title, wrap);
+    }
+
+    private Node buildFeaturedServers() {
+        Label title = new Label("Featured Servers");
+        title.getStyleClass().add("section-label");
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+
+        List<ServerStatus> servers = ServerStatus.FEATURED;
+        List<ServerTileView> views = new ArrayList<>();
+        int col = 0, row = 0;
+        for (ServerStatus s : servers) {
+            ServerTileView view = serverTileView(s);
+            grid.add(view.tile(), col, row);
+            views.add(view);
+            col++;
+            if (col == 4) {
+                col = 0;
+                row++;
+            }
+        }
+
+        for (int i = 0; i < views.size(); i++) {
+            final int idx = i;
+            pool.execute(() -> {
+                ServerStatus fresh = ServerStatus.fetch(servers.get(idx).host());
+                Platform.runLater(() -> updateServerTile(views.get(idx), fresh));
+            });
+        }
+
+        HBox wrap = new HBox(grid);
+        wrap.setPadding(new Insets(0, 28, 12, 28));
+        HBox.setHgrow(grid, Priority.ALWAYS);
+        return new VBox(0, title, wrap);
+    }
+
+    private record ServerTileView(VBox tile, Label dot, Label count) {
+    }
+
+    private ServerTileView serverTileView(ServerStatus s) {
+        VBox tile = new VBox(6);
+        tile.getStyleClass().add("server-tile");
+        tile.setPrefWidth(180);
+        tile.setPrefHeight(88);
+
+        Label dot = new Label("\u25CF");
+        dot.getStyleClass().add("server-status-dot");
+        Label name = new Label(s.name());
+        name.getStyleClass().add("server-tile-name");
+        name.setMaxWidth(120);
+        name.setTextOverrun(OverrunStyle.ELLIPSIS);
+        HBox head = new HBox(6, dot, name);
+        head.setAlignment(Pos.CENTER_LEFT);
+
+        Label host = new Label(s.host());
+        host.getStyleClass().add("server-tile-host");
+
+        Label count = new Label("Checking...");
+        count.getStyleClass().add("server-tile-count");
+
+        tile.getChildren().addAll(head, host, count);
+        tile.setOnMouseClicked(e -> setStatus(s.name() + " - " + count.getText() + " (" + s.host() + ")"));
+        return new ServerTileView(tile, dot, count);
+    }
+
+    private void updateServerTile(ServerTileView view, ServerStatus s) {
+        view.dot().getStyleClass().removeAll("server-online", "server-offline");
+        view.count().getStyleClass().removeAll("server-tile-offline-text");
+        if (s.online()) {
+            view.dot().getStyleClass().add("server-online");
+            String version = s.version() == null || s.version().isBlank() ? "?" : s.version();
+            String tip = "Version " + version;
+            if (s.maxPlayers() > 0) tip += " \u00B7 " + formatCount(s.maxPlayers()) + " max";
+            view.count().setText(formatCount(s.onlinePlayers()) + " playing");
+            view.count().setTooltip(new Tooltip(tip));
+        } else {
+            view.dot().getStyleClass().add("server-offline");
+            view.count().getStyleClass().add("server-tile-offline-text");
+            view.count().setText("Offline");
+            view.count().setTooltip(null);
+        }
+    }
+
+    private static String formatCount(int n) {
+        return String.format("%,d", n);
     }
 
     private static record CardInfo(String title, String desc) { }

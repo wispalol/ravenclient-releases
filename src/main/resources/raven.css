@@ -452,6 +452,166 @@
     -fx-text-fill: #b8a9ff;
 }
 
+/* --- Home: greeting + version chip ---------------------------------------- */
+
+.welcome-greeting {
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #c9c9d6;
+    -fx-transition: all 0.25s ease;
+}
+
+.welcome-greeting:hover {
+    -fx-text-fill: #eaeaea;
+}
+
+.version-chip {
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #b8a9ff;
+    -fx-background-color: rgba(124, 92, 255, 0.12);
+    -fx-background-radius: 8;
+    -fx-border-color: rgba(124, 92, 255, 0.3);
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 4 10 4 10;
+    -fx-transition: all 0.25s ease;
+}
+
+.version-chip:hover {
+    -fx-background-color: rgba(124, 92, 255, 0.22);
+    -fx-text-fill: #ffffff;
+}
+
+/* --- Quickplay ------------------------------------------------------------ */
+
+.quickplay-bar {
+    -fx-background-color: rgba(18, 16, 32, 0.55);
+    -fx-background-radius: 14;
+    -fx-border-color: rgba(255, 255, 255, 0.05);
+    -fx-border-radius: 14;
+    -fx-border-width: 1;
+    -fx-padding: 10 12 10 12;
+}
+
+.quickplay-chip {
+    -fx-background-color: rgba(22, 20, 40, 0.7);
+    -fx-background-radius: 10;
+    -fx-border-color: rgba(255, 255, 255, 0.07);
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-text-fill: #c9c9d6;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-padding: 8 16 8 16;
+    -fx-cursor: hand;
+    -fx-transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.quickplay-chip:hover {
+    -fx-border-color: #7c5cff;
+    -fx-background-color: rgba(124, 92, 255, 0.14);
+    -fx-text-fill: #ffffff;
+    -fx-transform: translateY(-2px);
+    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.3), 12, 0, 0, 0);
+}
+
+/* --- Featured servers ----------------------------------------------------- */
+
+.server-tile {
+    -fx-background-color: rgba(18, 16, 32, 0.7);
+    -fx-background-radius: 14;
+    -fx-border-color: rgba(255, 255, 255, 0.05);
+    -fx-border-radius: 14;
+    -fx-border-width: 1;
+    -fx-padding: 12;
+    -fx-cursor: hand;
+    -fx-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.server-tile:hover {
+    -fx-background-color: rgba(22, 20, 40, 0.9);
+    -fx-border-color: rgba(124, 92, 255, 0.4);
+    -fx-transform: translateY(-3px) scale(1.02);
+    -fx-effect: dropshadow(gaussian, rgba(124, 92, 255, 0.14), 14, 0, 0, 4);
+}
+
+.server-tile-name {
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #eaeaea;
+    -fx-transition: all 0.25s ease;
+}
+
+.server-tile:hover .server-tile-name {
+    -fx-text-fill: #7c5cff;
+}
+
+.server-tile-host {
+    -fx-font-size: 11px;
+    -fx-text-fill: #5a5d6e;
+    -fx-transition: all 0.25s ease;
+}
+
+.server-tile-count {
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #32ff7e;
+}
+
+.server-tile-offline-text {
+    -fx-text-fill: #ff5470;
+}
+
+.server-status-dot {
+    -fx-font-size: 10px;
+    -fx-text-fill: #5a5d6e;
+    -fx-transition: all 0.25s ease;
+}
+
+.server-online {
+    -fx-text-fill: #32ff7e;
+    -fx-effect: dropshadow(gaussian, rgba(50, 255, 126, 0.6), 8, 0, 0, 0);
+}
+
+.server-offline {
+    -fx-text-fill: #ff5470;
+    -fx-effect: dropshadow(gaussian, rgba(255, 84, 112, 0.5), 8, 0, 0, 0);
+}
+
+/* --- News tag ------------------------------------------------------------- */
+
+.news-tag {
+    -fx-font-size: 10px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #b8a9ff;
+    -fx-background-color: rgba(124, 92, 255, 0.12);
+    -fx-background-radius: 6;
+    -fx-padding: 3 8 3 8;
+    -fx-transition: all 0.25s ease;
+}
+
+.news-card:hover .news-tag {
+    -fx-background-color: rgba(124, 92, 255, 0.25);
+    -fx-text-fill: #ffffff;
+}
+
+/* --- Home scroll pane ----------------------------------------------------- */
+
+.home-scroll {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.home-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.home-scroll > .corner {
+    -fx-background-color: transparent;
+}
+
 .field-label {
     -fx-font-size: 12px;
     -fx-text-fill: #8a8d9c;

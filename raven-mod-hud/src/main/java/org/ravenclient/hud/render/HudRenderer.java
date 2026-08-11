@@ -14,7 +14,6 @@ public class HudRenderer {
 
 	private final HudConfig config;
 	private final List<HudElement> elements;
-	private boolean running = false;
 
 	public HudRenderer(HudConfig config) {
 		this.config = config;
@@ -35,18 +34,13 @@ public class HudRenderer {
 		}
 	}
 
-	public void start() { running = true; }
-	public void stop() { running = false; }
-
-	public void render(GuiGraphics guiGraphics) {
-		if (!running) return;
-
-		int width = Minecraft.getInstance().getWindow().getWidth();
-		int height = Minecraft.getInstance().getWindow().getHeight();
+	public void render(GuiGraphics g, float tickDelta) {
+		int w = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+		int h = Minecraft.getInstance().getWindow().getGuiScaledHeight();
 
 		for (HudElement el : elements) {
-			if (el.cfg == null || !el.cfg.visible) continue;
-			el.render(guiGraphics, width, height, false);
+			if (!el.cfg.visible) continue;
+			el.render(g, w, h, false);
 		}
 	}
 

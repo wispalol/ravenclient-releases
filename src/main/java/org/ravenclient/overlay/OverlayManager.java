@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -32,12 +33,12 @@ public class OverlayManager {
 
     private static Path configDirectory;
 
-    private final Stage overlayStage;
-    private final StackPane root;
-    private final Canvas hudCanvas;
+    private Stage overlayStage;
+    private StackPane root;
+    private Canvas hudCanvas;
     private final List<HudElement> elements;
     private final HudConfig config;
-    private final HudRenderer renderer;
+    private HudRenderer renderer;
     private final ScheduledExecutorService keybindPoller;
 
     private volatile boolean guiOpen = false;
@@ -92,6 +93,31 @@ public class OverlayManager {
         applyModuleVisibility();
         config.ensureDefaultProfile();
 
+        CountDownLatch latch = new CountDownLatch(1);
+        Platform.runLater(() -> {
+            try {
+                initFx();
+            } finally {
+                latch.countDown();
+            }
+        });
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        keybindPoller = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "raven-keybind");
+            t.setDaemon(false);
+            t.setPriority(Thread.MAX_PRIORITY);
+            return t;
+        });
+        keybindPoller.scheduleAtFixedRate(this::pollKeybind, 100, 16, TimeUnit.MILLISECONDS);
+        System.out.println("[RAVEN] OverlayManager started, keybind poller running at ~60Hz");
+    }
+
+    private void initFx() {
         overlayStage = new Stage(StageStyle.TRANSPARENT);
         overlayStage.setAlwaysOnTop(true);
         overlayStage.setTitle("RavenOverlay");
@@ -111,7 +137,12 @@ public class OverlayManager {
         overlayStage.setY(0);
         overlayStage.setWidth(sw);
         overlayStage.setHeight(sh);
+
+        com.sun.jna.platform.win32.WinDef.HWND prevFg = com.sun.jna.platform.win32.User32.INSTANCE.GetForegroundWindow();
         overlayStage.show();
+        if (prevFg != null) {
+            com.sun.jna.platform.win32.User32.INSTANCE.SetForegroundWindow(prevFg);
+        }
         System.out.println("[RAVEN] Overlay stage shown, size=" + sw + "x" + sh);
 
         setClickThrough(true);
@@ -122,15 +153,6 @@ public class OverlayManager {
         if (gameProcess != null) {
             startLogParser();
         }
-
-        keybindPoller = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread t = new Thread(r, "raven-keybind");
-            t.setDaemon(false);
-            t.setPriority(Thread.MAX_PRIORITY);
-            return t;
-        });
-        keybindPoller.scheduleAtFixedRate(this::pollKeybind, 100, 16, TimeUnit.MILLISECONDS);
-        System.out.println("[RAVEN] OverlayManager started, keybind poller running at ~60Hz");
     }
 
     private void pollKeybind() {
@@ -140,8 +162,12 @@ public class OverlayManager {
                 boolean down = isKeyDown(menuVk);
                 boolean prev = lastKeyState.computeIfAbsent(menuVk, k -> false);
                 if (down && !prev) {
-                    System.out.println("[RAVEN] Menu key (" + Keys.name(menuVk) + ") pressed, toggling GUI");
-                    Platform.runLater(this::toggleGui);
+                    if (gameProcess != null && gameProcess.isAlive()) {
+                        System.out.println("[RAVEN] Menu key pressed — Nest UI handled in-game by mod, skipping overlay menu");
+                    } else {
+                        System.out.println("[RAVEN] Menu key (" + Keys.name(menuVk) + ") pressed, toggling GUI");
+                        Platform.runLater(this::toggleGui);
+                    }
                 }
                 lastKeyState.put(menuVk, down);
             }

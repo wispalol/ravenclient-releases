@@ -282,8 +282,13 @@ public final class GameLauncher {
         Path modsDir = versionDir.resolve("mods");
         Files.createDirectories(modsDir);
 
-        Path hudFile = modsDir.resolve("raven-client-hud.jar");
-        if (!Files.exists(hudFile)) {
+        String mcVersion = mcVersionOf(profileId);
+        if (!mcVersion.startsWith("1.21.")) {
+            listener.log("Skipping RavenClient HUD mod for " + mcVersion + " (not supported yet)");
+            Path hudFile = modsDir.resolve("raven-client-hud.jar");
+            Files.deleteIfExists(hudFile);
+        } else {
+            Path hudFile = modsDir.resolve("raven-client-hud.jar");
             try (InputStream modStream = getClass().getResourceAsStream("/raven-client-hud.jar")) {
                 if (modStream != null) {
                     Files.copy(modStream, hudFile, StandardCopyOption.REPLACE_EXISTING);
@@ -294,7 +299,6 @@ public final class GameLauncher {
             }
         }
 
-        String mcVersion = mcVersionOf(profileId);
         String titleName = "raven-client-title-" + mcVersion + ".jar";
         Path titleFile = modsDir.resolve(titleName);
         if (!Files.exists(titleFile)) {
