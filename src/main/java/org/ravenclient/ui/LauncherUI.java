@@ -924,7 +924,7 @@ public class LauncherUI extends Application {
             grid.add(view.tile(), col, row);
             views.add(view);
             col++;
-            if (col == 4) {
+            if (col == 10) {
                 col = 0;
                 row++;
             }
