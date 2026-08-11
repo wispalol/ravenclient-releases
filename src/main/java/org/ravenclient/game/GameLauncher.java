@@ -383,7 +383,12 @@ public final class GameLauncher {
 
     /** Builds the JVM command line and starts the game process. */
     public Process launch(LaunchData data, Account account) throws IOException {
-        List<String> cmd = buildCommand(data, account);
+        return launch(data, account, null, -1);
+    }
+
+    /** Launches the game and auto-connects to {@code serverHost:serverPort} when provided. */
+    public Process launch(LaunchData data, Account account, String serverHost, int serverPort) throws IOException {
+        List<String> cmd = buildCommand(data, account, serverHost, serverPort);
         StringBuilder sb = new StringBuilder("Launching:");
         for (String s : cmd) sb.append(' ').append(s.contains(" ") ? "\"" + s + "\"" : s);
         // Never log the session token (public launcher).
@@ -399,7 +404,7 @@ public final class GameLauncher {
         return process;
     }
 
-    private List<String> buildCommand(LaunchData data, Account account) {
+    private List<String> buildCommand(LaunchData data, Account account, String serverHost, int serverPort) {
         List<String> cmd = new ArrayList<>();
         cmd.add(data.javaExe() != null ? data.javaExe().toString() : javaExecutable());
 
@@ -457,6 +462,16 @@ public final class GameLauncher {
             String legacy = data.meta().minecraftArguments();
             if (legacy != null && !legacy.isBlank()) {
                 cmd.addAll(splitArgs(substitute(legacy, data, account)));
+            }
+        }
+
+        // Auto-connect to a server (featured / quick join).
+        if (serverHost != null && !serverHost.isBlank()) {
+            cmd.add("--server");
+            cmd.add(serverHost);
+            if (serverPort > 0) {
+                cmd.add("--port");
+                cmd.add(String.valueOf(serverPort));
             }
         }
         return cmd;

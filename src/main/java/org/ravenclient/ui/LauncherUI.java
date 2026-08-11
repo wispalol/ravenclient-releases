@@ -34,7 +34,6 @@ import org.ravenclient.config.ProfileStore.Profile;
 import org.ravenclient.game.GameLauncher;
 import org.ravenclient.game.Loader;
 import org.ravenclient.game.LoaderMeta;
-import org.ravenclient.meta.NewsFeed;
 import org.ravenclient.meta.ServerStatus;
 import org.ravenclient.overlay.OverlayManager;
 import org.ravenclient.updater.AppUpdater;
@@ -824,12 +823,11 @@ public class LauncherUI extends Application {
         HBox.setHgrow(hero, Priority.ALWAYS);
         HBox.setHgrow(right, Priority.NEVER);
 
-        // Lunar-style widgets: quickplay, featured servers, news
+        // Quickplay + featured servers
         Node quickplay = buildQuickplay();
         Node servers = buildFeaturedServers();
-        Node newsSection = buildNewsSection();
 
-        VBox content = new VBox(0, topBar, main, quickplay, servers, newsSection);
+        VBox content = new VBox(0, topBar, main, quickplay, servers);
         content.getStyleClass().add("home-container");
 
         ScrollPane scroll = new ScrollPane(content);
@@ -838,56 +836,6 @@ public class LauncherUI extends Application {
         scroll.getStyleClass().add("home-scroll");
         homeRoot = scroll;
         return scroll;
-    }
-
-    private Node buildNewsSection() {
-        Label title = new Label("Latest News");
-        title.getStyleClass().add("section-label");
-
-        VBox newsItems = new VBox(12);
-        newsItems.setPadding(new Insets(16, 28, 16, 28));
-        for (NewsFeed.NewsItem item : NewsFeed.defaultNews()) newsItems.getChildren().add(newsCard(item));
-
-        HBox container = new HBox();
-        container.setPadding(new Insets(0, 28, 20, 28));
-        container.getChildren().add(newsItems);
-        HBox.setHgrow(newsItems, Priority.ALWAYS);
-
-        VBox section = new VBox(0, title, container);
-
-        pool.execute(() -> {
-            List<NewsFeed.NewsItem> items = NewsFeed.fetch();
-            Platform.runLater(() -> {
-                newsItems.getChildren().clear();
-                for (NewsFeed.NewsItem item : items) newsItems.getChildren().add(newsCard(item));
-            });
-        });
-        return section;
-    }
-
-    private Node newsCard(NewsFeed.NewsItem item) {
-        VBox card = new VBox(8);
-        card.getStyleClass().add("news-card");
-
-        HBox header = new HBox(10);
-        header.setAlignment(Pos.CENTER_LEFT);
-        Label time = new Label("\u23F0");
-        time.getStyleClass().add("news-time");
-        Label newsTitle = new Label(item.title());
-        newsTitle.getStyleClass().add("news-title");
-        header.getChildren().addAll(time, newsTitle);
-        if (item.tag() != null && !item.tag().isBlank()) {
-            Label tag = new Label(item.tag());
-            tag.getStyleClass().add("news-tag");
-            header.getChildren().add(tag);
-        }
-
-        Label newsDesc = new Label(item.body());
-        newsDesc.setWrapText(true);
-        newsDesc.getStyleClass().add("news-desc");
-
-        card.getChildren().addAll(header, newsDesc);
-        return card;
     }
 
     // --- quickplay + featured servers -------------------------------------
@@ -924,6 +872,22 @@ public class LauncherUI extends Application {
         Label title = new Label("Featured Servers");
         title.getStyleClass().add("section-label");
 
+        TextField quickJoinField = new TextField();
+        quickJoinField.setPromptText("Server address (e.g. play.example.com:25565)");
+        quickJoinField.getStyleClass().add("text-field");
+        quickJoinField.setPrefWidth(280);
+        quickJoinField.setOnAction(e -> quickJoin(quickJoinField.getText()));
+
+        Button quickJoinBtn = new Button("Quick Join");
+        quickJoinBtn.getStyleClass().add("secondary-button");
+        quickJoinBtn.setOnAction(e -> quickJoin(quickJoinField.getText()));
+
+        Region headerSpacer = new Region();
+        HBox.setHgrow(headerSpacer, Priority.ALWAYS);
+        HBox header = new HBox(10, title, headerSpacer, quickJoinField, quickJoinBtn);
+        header.setPadding(new Insets(0, 28, 0, 28));
+        header.setAlignment(Pos.CENTER_LEFT);
+
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
@@ -953,7 +917,7 @@ public class LauncherUI extends Application {
         HBox wrap = new HBox(grid);
         wrap.setPadding(new Insets(0, 28, 12, 28));
         HBox.setHgrow(grid, Priority.ALWAYS);
-        return new VBox(0, title, wrap);
+        return new VBox(0, header, wrap);
     }
 
     private record ServerTileView(VBox tile, Label dot, Label count) {
@@ -981,7 +945,11 @@ public class LauncherUI extends Application {
         count.getStyleClass().add("server-tile-count");
 
         tile.getChildren().addAll(head, host, count);
-        tile.setOnMouseClicked(e -> setStatus(s.name() + " - " + count.getText() + " (" + s.host() + ")"));
+        Tooltip.install(tile, new Tooltip("Click to launch Minecraft and join " + s.host()));
+        tile.setOnMouseClicked(e -> {
+            String[] hp = splitHostPort(s.host());
+            launchWithServer(hp[0], Integer.parseInt(hp[1]));
+        });
         return new ServerTileView(tile, dot, count);
     }
 
@@ -2049,6 +2017,10 @@ public class LauncherUI extends Application {
     }
 
     private void launch(String version, String loader) {
+        launch(version, loader, null, -1);
+    }
+
+    private void launch(String version, String loader, String serverHost, int serverPort) {
         if (account == null) {
             setStatus("Sign in with your Microsoft account to launch Minecraft.");
             return;
@@ -2090,7 +2062,7 @@ public class LauncherUI extends Application {
                 
                 GameLauncher.LaunchData data = gl.prepare(actualVersion);
                 currentLaunchData = data;
-                Process process = gl.launch(data, account);
+                Process process = gl.launch(data, account, serverHost, serverPort);
                 gameProcess = process;
                 overlayManager = new OverlayManager(config.launcherDir, process);
                 Platform.runLater(() -> {
@@ -2109,6 +2081,56 @@ public class LauncherUI extends Application {
                 Platform.runLater(() -> setBusy(false));
             }
         });
+    }
+
+    /** Launches Minecraft with the last-used setup and auto-joins the given server. */
+    private void launchWithServer(String host, int port) {
+        if (account == null) {
+            setStatus("Sign in with your Microsoft account to launch Minecraft.");
+            return;
+        }
+        if (host == null || host.isBlank()) {
+            setStatus("Enter a server address first.");
+            return;
+        }
+        String version = null;
+        String loader = "Vanilla";
+        Profile p = activeProfile();
+        if (p != null) {
+            version = p.version();
+            loader = p.loader();
+        }
+        if (version == null || version.isBlank()) {
+            version = config.selectedVersion;
+        }
+        if (version == null || version.isBlank()) {
+            version = versionBox != null ? versionBox.getValue() : null;
+        }
+        if (version == null || version.isBlank()) {
+            version = SUPPORTED_VERSIONS.get(0);
+        }
+        if (port <= 0) port = 25565;
+        launch(version, loader, host, port);
+    }
+
+    /** Quick-join handler for the server address field. */
+    private void quickJoin(String input) {
+        String[] hp = splitHostPort(input);
+        launchWithServer(hp[0], Integer.parseInt(hp[1]));
+    }
+
+    /** Splits "host:port" (port optional, defaults to 25565). */
+    private static String[] splitHostPort(String addr) {
+        if (addr == null) addr = "";
+        addr = addr.trim();
+        int idx = addr.lastIndexOf(':');
+        if (idx > 0 && addr.indexOf(':') == idx) {
+            String port = addr.substring(idx + 1).trim();
+            if (port.matches("\\d+")) {
+                return new String[]{addr.substring(0, idx).trim(), port};
+            }
+        }
+        return new String[]{addr, "25565"};
     }
 
     private void openGameFolder() {
