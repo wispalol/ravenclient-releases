@@ -235,6 +235,12 @@ public final class GameLauncher {
         Files.createDirectories(profileMods);
         Files.createDirectories(gameMods);
 
+        // Remove legacy bundled mods that older launcher versions copied into the
+        // profile folder; they would otherwise be re-synced and crash the game
+        // (e.g. the old HUD mod's KeyMapping is incompatible with 1.21.11).
+        purgeLegacyBundledMods(profileMods);
+        purgeLegacyBundledMods(gameMods);
+
         Path marker = gameMods.resolve(".ravenclient-modssync.json");
         if (Files.isRegularFile(marker)) {
             try {
@@ -264,6 +270,21 @@ public final class GameLauncher {
                     .writeValueAsBytes(new ModsSync(placed)));
         }
         listener.log("Mods synced to game folder: " + placed.size());
+    }
+
+    /**
+     * Deletes the bundled mods no longer shipped with RavenClient. Older launchers copied
+     * them into the per-profile and game mods folders, where they would otherwise be
+     * re-synced into every launch (the old HUD mod crashes 1.21.11, and the title screen
+     * mod was removed entirely).
+     */
+    private static void purgeLegacyBundledMods(Path modsDir) throws IOException {
+        Files.deleteIfExists(modsDir.resolve("raven-client-hud.jar"));
+        try (DirectoryStream<Path> ds = Files.newDirectoryStream(modsDir, "raven-client-title-*.jar")) {
+            for (Path stale : ds) {
+                Files.deleteIfExists(stale);
+            }
+        }
     }
 
     private record ModsSync(List<String> files) {
