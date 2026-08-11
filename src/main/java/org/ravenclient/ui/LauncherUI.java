@@ -63,7 +63,11 @@ public class LauncherUI extends Application {
      */
     static final List<String> SUPPORTED_VERSIONS = List.of("1.21.11", "26.1.1", "26.2");
 
-    private final ExecutorService pool = Executors.newCachedThreadPool();
+    private final ExecutorService pool = Executors.newCachedThreadPool(r -> {
+        Thread t = new Thread(r, "raven-pool");
+        t.setDaemon(true);
+        return t;
+    });
 
     private LauncherConfig config;
     private Stage stage;
@@ -228,7 +232,11 @@ public class LauncherUI extends Application {
                 });
                 Platform.runLater(() -> {
                     log("Update installed. Restarting RavenClient...");
-                    Platform.exit();
+                    // The batch script waits for this process to fully exit before swapping
+                    // files and relaunching. System.exit() guarantees termination even if
+                    // background (executor) threads are still running, so the update can't
+                    // get stuck waiting for RavenClient.exe to close.
+                    System.exit(0);
                 });
             } catch (Exception e) {
                 Platform.runLater(() -> {

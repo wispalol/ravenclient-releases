@@ -109,7 +109,7 @@ public class OverlayManager {
 
         keybindPoller = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "raven-keybind");
-            t.setDaemon(false);
+            t.setDaemon(true);
             t.setPriority(Thread.MAX_PRIORITY);
             return t;
         });
