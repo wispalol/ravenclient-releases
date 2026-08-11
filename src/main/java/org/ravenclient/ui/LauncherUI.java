@@ -1724,13 +1724,16 @@ public class LauncherUI extends Application {
         ToggleButton discordBtn = new ToggleButton("Discord Rich Presence");
         discordBtn.getStyleClass().add("toggle-switch");
         discordBtn.setSelected(config.discordRpc);
+        ToggleButton hudOverlayBtn = new ToggleButton("In-game HUD overlay (kills, deaths, speed, etc.)");
+        hudOverlayBtn.getStyleClass().add("toggle-switch");
+        hudOverlayBtn.setSelected(config.hudOverlay);
         ToggleButton autoUpdateBtn = new ToggleButton("Auto-update on startup");
         autoUpdateBtn.getStyleClass().add("toggle-switch");
         autoUpdateBtn.setSelected(config.autoUpdate);
         ToggleButton launchOnStartupBtn = new ToggleButton("Launch on system startup");
         launchOnStartupBtn.getStyleClass().add("toggle-switch");
         launchOnStartupBtn.setSelected(config.launchOnStartup);
-        VBox toggles = new VBox(8, discordBtn, autoUpdateBtn, launchOnStartupBtn);
+        VBox toggles = new VBox(8, discordBtn, hudOverlayBtn, autoUpdateBtn, launchOnStartupBtn);
         behaviorCard.getChildren().addAll(behaviorTitle, toggles);
 
         // Advanced panel
@@ -1787,6 +1790,7 @@ public class LauncherUI extends Application {
             } catch (Exception ignored) {}
             config.fullscreen = fullscreenBtn.isSelected();
             config.discordRpc = discordBtn.isSelected();
+            config.hudOverlay = hudOverlayBtn.isSelected();
             config.autoUpdate = autoUpdateBtn.isSelected();
             config.launchOnStartup = launchOnStartupBtn.isSelected();
             config.jvmArgs = jvmField.getText();
@@ -2090,7 +2094,9 @@ public class LauncherUI extends Application {
                 currentLaunchData = data;
                 Process process = gl.launch(data, account, serverHost, serverPort);
                 gameProcess = process;
-                overlayManager = new OverlayManager(config.launcherDir, process);
+                if (config.hudOverlay) {
+                    overlayManager = new OverlayManager(config.launcherDir, process);
+                }
                 Platform.runLater(() -> {
                     setStatus("Minecraft is starting...");
                     log("Minecraft launched (PID " + process.pid() + ").");

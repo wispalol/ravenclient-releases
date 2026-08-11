@@ -25,6 +25,7 @@ public final class LauncherConfig {
     public int windowHeight = 720;
     public boolean fullscreen = false;
     public boolean discordRpc = true;
+    public boolean hudOverlay = false;
     public boolean autoUpdate = true;
     public boolean launchOnStartup = false;
     public String jvmArgs = "";
@@ -56,6 +57,7 @@ public final class LauncherConfig {
             if (node.hasNonNull("windowHeight")) cfg.windowHeight = node.get("windowHeight").asInt(720);
             if (node.hasNonNull("fullscreen")) cfg.fullscreen = node.get("fullscreen").asBoolean(false);
             if (node.hasNonNull("discordRpc")) cfg.discordRpc = node.get("discordRpc").asBoolean(true);
+            if (node.hasNonNull("hudOverlay")) cfg.hudOverlay = node.get("hudOverlay").asBoolean(false);
             if (node.hasNonNull("autoUpdate")) cfg.autoUpdate = node.get("autoUpdate").asBoolean(true);
             if (node.hasNonNull("launchOnStartup")) cfg.launchOnStartup = node.get("launchOnStartup").asBoolean(false);
             if (node.hasNonNull("jvmArgs")) cfg.jvmArgs = node.get("jvmArgs").asText("");
@@ -80,6 +82,7 @@ public final class LauncherConfig {
         node.put("windowHeight", windowHeight);
         node.put("fullscreen", fullscreen);
         node.put("discordRpc", discordRpc);
+        node.put("hudOverlay", hudOverlay);
         node.put("autoUpdate", autoUpdate);
         node.put("launchOnStartup", launchOnStartup);
         node.put("jvmArgs", jvmArgs == null ? "" : jvmArgs);
