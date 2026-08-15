@@ -1,4 +1,6 @@
 {
-    "note": "Raven+ members, keyed by Xbox XUID (preferred) or Minecraft UUID so it survives name changes. expiresAt is ISO-8601 UTC.",
-    "members": []
+    "note": "Raven+ members, keyed by Xbox XUID (preferred) or Minecraft UUID so it survives name changes. expiresAt is ISO-8601 UTC; omit it for permanent membership.",
+    "members": [
+        { "uuid": "c4a5bc69b369417ea716be94f256556e" }
+    ]
 }
