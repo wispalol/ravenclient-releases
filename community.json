@@ -1,0 +1,6 @@
+{
+    "servers": [
+        { "name": "PvP Network", "address": "pvpnetwork.online", "invite": "" },
+        { "name": "PvP Hub", "address": "pvphub.me", "invite": "" }
+    ]
+}
